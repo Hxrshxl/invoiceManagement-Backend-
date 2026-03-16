@@ -1,0 +1,103 @@
+import { injectable, inject } from "inversify";
+import { Logger } from "winston";
+import TYPES from "../types/inversifyTypes";
+import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
+import { ISowPaymentPlanLineItem } from "../interfaces/sowPaymentPlanLineItemInterface";
+import { CreateSowPaymentPlanLineItemDto } from "../dto/createSowPaymentPlanLineItemDto";
+
+@injectable()
+class SowPaymentPlanLineItemService {
+  constructor(
+    @inject(TYPES.Logger)
+    private readonly logger: Logger
+  ) {}
+
+  async createSowPaymentPlanLineItem(dto: CreateSowPaymentPlanLineItemDto): Promise<ISowPaymentPlanLineItem> {
+    try {
+      const lineItem = new SowPaymentPlanLineItem();
+      lineItem.sowPaymentPlanId = dto.sowPaymentPlanId;
+      lineItem.sowId            = dto.sowId;
+      lineItem.orderId          = dto.orderId;
+      lineItem.particular       = dto.particular;
+      lineItem.rate             = dto.rate;
+      lineItem.unit             = dto.unit;
+      lineItem.total            = dto.total;
+
+      const created = await lineItem.save();
+
+      this.logger.info(`SOW Payment Plan Line Item created successfully with id: ${created.id}`);
+
+      return {
+        id:               created.id,
+        sowPaymentPlanId: created.sowPaymentPlanId,
+        sowId:            created.sowId,
+        orderId:          created.orderId,
+        particular:       created.particular,
+        rate:             created.rate,
+        unit:             created.unit,
+        total:            created.total,
+        createdAt:        created.createdAt,
+        updatedAt:        created.updatedAt,
+      };
+    } catch (error: any) {
+      this.logger.error("Error creating SOW Payment Plan Line Item", error);
+      throw error.status ? error : { status: 500, message: "Failed to create SOW Payment Plan Line Item" };
+    }
+  }
+
+  async getAllSowPaymentPlanLineItems(): Promise<ISowPaymentPlanLineItem[]> {
+    try {
+      const lineItems = await SowPaymentPlanLineItem.findAll();
+
+      this.logger.info(`Fetched ${lineItems.length} SOW Payment Plan Line Items`);
+
+      return lineItems.map((lineItem) => ({
+        id:               lineItem.id,
+        sowPaymentPlanId: lineItem.sowPaymentPlanId,
+        sowId:            lineItem.sowId,
+        orderId:          lineItem.orderId,
+        particular:       lineItem.particular,
+        rate:             lineItem.rate,
+        unit:             lineItem.unit,
+        total:            lineItem.total,
+        createdAt:        lineItem.createdAt,
+        updatedAt:        lineItem.updatedAt,
+      }));
+    } catch (error: any) {
+      this.logger.error("Error fetching SOW Payment Plan Line Items", error);
+      throw error.status ? error : { status: 500, message: "Failed to fetch SOW Payment Plan Line Items" };
+    }
+  }
+
+  async getSowPaymentPlanLineItemsByPlanId(sowPaymentPlanId: string): Promise<ISowPaymentPlanLineItem[]> {
+    try {
+      const lineItems = await SowPaymentPlanLineItem.findAll({
+        where: { sowPaymentPlanId },
+      });
+
+      if (!lineItems.length) {
+        throw { status: 404, message: "No line items found for this SOW Payment Plan" };
+      }
+
+      this.logger.info(`Fetched ${lineItems.length} line items for sowPaymentPlanId: ${sowPaymentPlanId}`);
+
+      return lineItems.map((lineItem) => ({
+        id:               lineItem.id,
+        sowPaymentPlanId: lineItem.sowPaymentPlanId,
+        sowId:            lineItem.sowId,
+        orderId:          lineItem.orderId,
+        particular:       lineItem.particular,
+        rate:             lineItem.rate,
+        unit:             lineItem.unit,
+        total:            lineItem.total,
+        createdAt:        lineItem.createdAt,
+        updatedAt:        lineItem.updatedAt,
+      }));
+    } catch (error: any) {
+      this.logger.error(`Error fetching line items for sowPaymentPlanId: ${sowPaymentPlanId}`, error);
+      throw error.status ? error : { status: 500, message: "Failed to fetch SOW Payment Plan Line Items" };
+    }
+  }
+}
+
+export default SowPaymentPlanLineItemService;
