@@ -5,6 +5,7 @@ import sowRouter from "./sowRoutes";
 import sowPaymentPlanRouter from "./sowPaymentPlanRoutes";
 import sowPaymentPlanLineItemRouter from "./sowPaymentPlanLineItemRoutes";
 import invoiceRouter from "./invoiceRoutes";
+import invoiceLineItemRouter from "./invoiceLineItemRoutes";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use("/sows", sowRouter);
 router.use("/sowPaymentPlans", sowPaymentPlanRouter);
 router.use("/sowPaymentPlanLineItems", sowPaymentPlanLineItemRouter);
 router.use("/invoices", invoiceRouter);
+router.use("/invoiceLineItems", invoiceLineItemRouter);
 
 export default router;

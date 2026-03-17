@@ -15,6 +15,8 @@ import SowPaymentPlanLineItemService from "../services/sowPaymentPlanLineItemSer
 import SowPaymentPlanLineItemController from "../controllers/sowPaymentPlanLineItemController";
 import InvoiceService from "../services/invoiceService";
 import InvoiceController from "../controllers/invoiceController";
+import InvoiceLineItemService from "../services/invoiceLineItemService";
+import InvoiceLineItemController from "../controllers/invoiceLineItemController";
 
 const container = new Container();
 
@@ -37,5 +39,8 @@ container.bind(TYPES.SowPaymentPlanLineItemController).to(SowPaymentPlanLineItem
 
 container.bind(TYPES.InvoiceService).to(InvoiceService).inSingletonScope();
 container.bind(TYPES.InvoiceController).to(InvoiceController).inSingletonScope();
+
+container.bind(TYPES.InvoiceLineItemService).to(InvoiceLineItemService).inSingletonScope();
+container.bind(TYPES.InvoiceLineItemController).to(InvoiceLineItemController).inSingletonScope();
 
 export default container;
