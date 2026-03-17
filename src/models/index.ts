@@ -31,7 +31,10 @@ Invoice.belongsTo(Sow, { foreignKey: "sowId" });
 Customer.hasMany(Invoice, { foreignKey: "customerId" });
 Invoice.belongsTo(Customer, { foreignKey: "customerId" });
 
-SowPaymentPlan.hasMany(Invoice, { foreignKey: "sowPaymentPlanId" });
+SowPaymentPlan.hasMany(Invoice, {
+  foreignKey: "sowPaymentPlanId",
+  as: "Invoices",
+});
 Invoice.belongsTo(SowPaymentPlan, { foreignKey: "sowPaymentPlanId" });
 
 Invoice.hasMany(InvoiceLineItem, {

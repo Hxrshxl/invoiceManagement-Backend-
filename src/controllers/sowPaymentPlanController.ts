@@ -117,6 +117,23 @@ class SowPaymentPlanController {
       });
     }
   }
+
+  async getInvoiceScheduleHandler(_req: Request, res: Response): Promise<void> {
+  try {
+    const schedule = await this.sowPaymentPlanService.getInvoiceSchedule();
+    res.status(200).json({
+      success: true,
+      message: "Invoice schedule fetched successfully",
+      data: schedule,
+    });
+  } catch (error: any) {
+    this.logger.error("Error in getInvoiceScheduleHandler", error);
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
+  }
+}
 }
 
 export default SowPaymentPlanController;

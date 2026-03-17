@@ -18,9 +18,11 @@ class InvoiceController {
     private readonly logger: Logger
   ) {}
 
-async generateInvoicesForTodayHandler(_req: Request, res: Response): Promise<void> {
+async generateInvoicesForTodayHandler(req: Request, res: Response): Promise<void> {
   try {
-    const { invoices, skipped } = await this.invoiceService.generateInvoicesForToday();
+    const { date } = req.body;
+
+    const { invoices, skipped } = await this.invoiceService.generateInvoicesForToday(date);
 
     let message = "";
 

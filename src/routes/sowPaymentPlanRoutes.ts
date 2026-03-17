@@ -23,4 +23,8 @@ sowPaymentPlanRouter.post("/getSowPaymentPlansBySowId", (req: Request, res: Resp
   sowPaymentPlanController.getSowPaymentPlansBySowIdHandler(req, res);
 });
 
+sowPaymentPlanRouter.post("/getInvoiceSchedule", (req: Request, res: Response) => {
+  sowPaymentPlanController.getInvoiceScheduleHandler(req, res);
+});
+
 export default sowPaymentPlanRouter;

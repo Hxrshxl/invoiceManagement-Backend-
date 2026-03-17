@@ -15,9 +15,9 @@ class InvoiceService {
     private readonly logger: Logger
   ) {}
 
-async generateInvoicesForToday(): Promise<{ invoices: IInvoice[], skipped: number }> {
+async generateInvoicesForToday(date?: string): Promise<{ invoices: IInvoice[], skipped: number }> {
   try {
-    const today = new Date().toISOString().split("T")[0];
+    const today = date || new Date().toISOString().split("T")[0];
 
     this.logger.info(`Generating invoices for date: ${today}`);
 
