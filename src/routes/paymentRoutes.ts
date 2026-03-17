@@ -1,18 +1,15 @@
 import { Router, Request, Response } from "express";
-import container from "../config/container";
-import PaymentController from "../controllers/paymentController";
+import { container } from "../app";
 import TYPES from "../types/inversifyTypes";
+import PaymentController from "../controllers/paymentController";
 
 const paymentRouter = Router();
 
-const paymentController = container.get<PaymentController>(TYPES.PaymentController);
-
 paymentRouter.post("/createPayment", (req: Request, res: Response) => {
-  paymentController.createPaymentHandler(req, res);
+  container.get<PaymentController>(TYPES.PaymentController).createPaymentHandler(req, res);
 });
-
 paymentRouter.post("/getPaymentByInvoiceId", (req: Request, res: Response) => {
-  paymentController.getPaymentByInvoiceIdHandler(req, res);
+  container.get<PaymentController>(TYPES.PaymentController).getPaymentByInvoiceIdHandler(req, res);
 });
 
 export default paymentRouter;

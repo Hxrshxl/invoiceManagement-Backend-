@@ -2,54 +2,58 @@ import { injectable, inject } from "inversify";
 import { Logger } from "winston";
 import TYPES from "../types/inversifyTypes";
 import Sow from "../models/sowModel";
-import { ISow } from "../interfaces/sowInterface";
 import { CreateSowDto } from "../dto/createSowDto";
+import { ISowDbService } from "../postgresDB/pgInterface";
+import { ISow } from "../interfaces/sowInterface";
 
 @injectable()
 class SowService {
   constructor(
+    @inject(TYPES.SowDbService)
+    private readonly sowDbService: ISowDbService,
+
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
 
   async createSow(dto: CreateSowDto): Promise<ISow> {
     try {
-      const existingSow = await Sow.findOne({
-        where: { customerPONumber: dto.customerPONumber },
-      });
-
+      // Check for duplicate PO number using DbService
+      const existingSow = await this.sowDbService.findSowByPONumber(dto.customerPONumber);
       if (existingSow) {
         throw { status: 409, message: "SOW with this PO number already exists" };
       }
 
+      // Map fields explicitly onto model instance
       const sow = new Sow();
-      sow.customerId              = dto.customerId;
-      sow.title                   = dto.title;
-      sow.totalValue              = dto.totalValue;
-      sow.currency                = dto.currency;
-      sow.validFrom               = dto.validFrom;
-      sow.validUpto               = dto.validUpto;
-      sow.customerPONumber        = dto.customerPONumber;
-      sow.customerSONumber        = dto.customerSONumber;
-      sow.invoiceEmailAddresses   = dto.invoiceEmailAddresses;
+      sow.customerId            = dto.customerId;
+      sow.title                 = dto.title;
+      sow.totalValue            = dto.totalValue;
+      sow.currency              = dto.currency;
+      sow.validFrom             = dto.validFrom;
+      sow.validUpto             = dto.validUpto;
+      sow.customerPONumber      = dto.customerPONumber;
+      sow.customerSONumber      = dto.customerSONumber;
+      sow.invoiceEmailAddresses = dto.invoiceEmailAddresses;
 
-      const created = await sow.save();
+      // Save via DbService
+      const created = await this.sowDbService.createSow(sow);
 
       this.logger.info(`SOW created successfully with id: ${created.id}`);
 
       return {
-        id:                     created.id,
-        customerId:             created.customerId,
-        title:                  created.title,
-        totalValue:             created.totalValue,
-        currency:               created.currency,
-        validFrom:              created.validFrom,
-        validUpto:              created.validUpto,
-        customerPONumber:       created.customerPONumber,
-        customerSONumber:       created.customerSONumber,
-        invoiceEmailAddresses:  created.invoiceEmailAddresses,
-        createdAt:              created.createdAt,
-        updatedAt:              created.updatedAt,
+        id:                    created.id,
+        customerId:            created.customerId,
+        title:                 created.title,
+        totalValue:            created.totalValue,
+        currency:              created.currency,
+        validFrom:             created.validFrom,
+        validUpto:             created.validUpto,
+        customerPONumber:      created.customerPONumber,
+        customerSONumber:      created.customerSONumber,
+        invoiceEmailAddresses: created.invoiceEmailAddresses,
+        createdAt:             created.createdAt,
+        updatedAt:             created.updatedAt,
       };
     } catch (error: any) {
       this.logger.error("Error creating SOW", error);
@@ -59,7 +63,7 @@ class SowService {
 
   async getAllSows(): Promise<ISow[]> {
     try {
-      const sows = await Sow.findAll();
+      const sows = await this.sowDbService.findAllSows();
 
       this.logger.info(`Fetched ${sows.length} SOWs`);
 
@@ -85,7 +89,7 @@ class SowService {
 
   async getSowById(id: string): Promise<ISow> {
     try {
-      const sow = await Sow.findByPk(id);
+      const sow = await this.sowDbService.findSowById(id);
 
       if (!sow) {
         throw { status: 404, message: "SOW not found" };

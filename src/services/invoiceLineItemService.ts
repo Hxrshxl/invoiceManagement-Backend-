@@ -2,24 +2,32 @@ import { injectable, inject } from "inversify";
 import { Logger } from "winston";
 import TYPES from "../types/inversifyTypes";
 import InvoiceLineItem from "../models/invoiceLineItemModel";
-import Invoice from "../models/invoiceModel";
 import { CreateInvoiceLineItemDto } from "../dto/createInvoiceLineItemDto";
+import { IInvoiceLineItemDbService, IInvoiceDbService } from "../postgresDB/pgInterface";
 import { IInvoiceLineItem } from "../interfaces/invoiceLineItemInterface";
 
 @injectable()
 class InvoiceLineItemService {
   constructor(
+    @inject(TYPES.InvoiceLineItemDbService)
+    private readonly invoiceLineItemDbService: IInvoiceLineItemDbService,
+
+    @inject(TYPES.InvoiceDbService)
+    private readonly invoiceDbService: IInvoiceDbService,
+
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
 
   async createInvoiceLineItem(dto: CreateInvoiceLineItemDto): Promise<IInvoiceLineItem> {
     try {
-      const existingInvoice = await Invoice.findByPk(dto.invoiceId);
+      // Check invoice exists before creating line item
+      const existingInvoice = await this.invoiceDbService.findInvoiceById(dto.invoiceId);
       if (!existingInvoice) {
         throw { status: 404, message: "Invoice not found" };
       }
 
+      // Map fields explicitly onto model instance
       const invoiceLineItem = new InvoiceLineItem();
       invoiceLineItem.invoiceId  = dto.invoiceId;
       invoiceLineItem.orderNo    = dto.orderNo;
@@ -28,7 +36,8 @@ class InvoiceLineItemService {
       invoiceLineItem.unit       = dto.unit;
       invoiceLineItem.total      = dto.total;
 
-      const created = await invoiceLineItem.save();
+      // Save via DbService
+      const created = await this.invoiceLineItemDbService.createInvoiceLineItem(invoiceLineItem);
 
       this.logger.info(`Invoice Line Item created successfully with id: ${created.id}`);
 
@@ -51,14 +60,14 @@ class InvoiceLineItemService {
 
   async getInvoiceLineItemsByInvoiceId(invoiceId: string): Promise<IInvoiceLineItem[]> {
     try {
-      const existingInvoice = await Invoice.findByPk(invoiceId);
+      // Check invoice exists before fetching line items
+      const existingInvoice = await this.invoiceDbService.findInvoiceById(invoiceId);
       if (!existingInvoice) {
         throw { status: 404, message: "Invoice not found" };
       }
 
-      const lineItems = await InvoiceLineItem.findAll({
-        where: { invoiceId },
-      });
+      // Fetch all line items for this invoice via DbService
+      const lineItems = await this.invoiceLineItemDbService.findInvoiceLineItemsByInvoiceId(invoiceId);
 
       if (!lineItems.length) {
         throw { status: 404, message: "No line items found for this invoice" };

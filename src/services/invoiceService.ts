@@ -3,112 +3,129 @@ import { Logger } from "winston";
 import TYPES from "../types/inversifyTypes";
 import Invoice from "../models/invoiceModel";
 import InvoiceLineItem from "../models/invoiceLineItemModel";
-import SowPaymentPlan from "../models/sowPaymentPlanModel";
 import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
+import {
+  IInvoiceDbService,
+  IInvoiceLineItemDbService,
+  ISowPaymentPlanDbService,
+} from "../postgresDB/pgInterface";
 import { IInvoice } from "../interfaces/invoiceInterface";
-import { IInvoiceLineItem } from "../interfaces/invoiceLineItemInterface";
 
 @injectable()
 class InvoiceService {
   constructor(
+    @inject(TYPES.InvoiceDbService)
+    private readonly invoiceDbService: IInvoiceDbService,
+
+    @inject(TYPES.InvoiceLineItemDbService)
+    private readonly invoiceLineItemDbService: IInvoiceLineItemDbService,
+
+    @inject(TYPES.SowPaymentPlanDbService)
+    private readonly sowPaymentPlanDbService: ISowPaymentPlanDbService,
+
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
 
-async generateInvoicesForToday(date?: string): Promise<{ invoices: IInvoice[], skipped: number }> {
-  try {
-    const today = date || new Date().toISOString().split("T")[0];
+  async generateInvoicesForToday(date?: string): Promise<{ invoices: IInvoice[], skipped: number }> {
+    try {
+      // Use provided date or default to today
+     let today: string;
+        if (date) {
+          today = date;
+        } else {
+          const now   = new Date();
+          const year  = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, "0");
+          const day   = String(now.getDate()).padStart(2, "0");
+          today       = `${year}-${month}-${day}`;
+        }
+      this.logger.info(`Generating invoices for date: ${today}`);
 
-    this.logger.info(`Generating invoices for date: ${today}`);
+      // Fetch all plans due on this date with line items included via DbService
+      const duePlans = await this.sowPaymentPlanDbService.findSowPaymentPlansByDate(today);
 
-    const duePlans = await SowPaymentPlan.findAll({
-      where: { plannedInvoiceDate: today },
-      include: [
-        {
-          model: SowPaymentPlanLineItem,
-          as: "SowPaymentPlanLineItems",
-        },
-      ],
-    });
-
-    if (!duePlans.length) {
-      this.logger.warn(`No payment plans due today: ${today}`);
-      return { invoices: [], skipped: 0 };
-    }
-
-    this.logger.info(`Found ${duePlans.length} payment plans due today`);
-
-    const invoices: IInvoice[] = [];
-    let skipped = 0;
-
-    for (const plan of duePlans) {
-      const existingInvoice = await Invoice.findOne({
-        where: { sowPaymentPlanId: plan.id },
-      });
-
-      if (existingInvoice) {
-        this.logger.warn(`Invoice already exists for sowPaymentPlanId: ${plan.id} — skipping`);
-        skipped++;
-        continue;
+      if (!duePlans.length) {
+        this.logger.warn(`No payment plans due today: ${today}`);
+        return { invoices: [], skipped: 0 };
       }
 
-      const invoice = new Invoice();
-      invoice.sowId             = plan.sowId;
-      invoice.customerId        = plan.customerId;
-      invoice.sowPaymentPlanId  = plan.id!;
-      invoice.status            = "Drafted";
-      invoice.totalInvoiceValue = plan.totalActualAmount;
-      invoice.invoiceAmount     = plan.totalActualAmount;
-      invoice.invoiceTaxAmount  = 0;
-      invoice.invoiceVersionNo  = 1;
+      this.logger.info(`Found ${duePlans.length} payment plans due today`);
 
-      const createdInvoice = await invoice.save();
+      const invoices: IInvoice[] = [];
+      let skipped = 0;
 
-      this.logger.info(`Invoice created with id: ${createdInvoice.id} for plan: ${plan.id}`);
+      for (const plan of duePlans) {
+        // Check if invoice already exists for this plan
+        const existingInvoice = await this.invoiceDbService.findInvoiceBySowPaymentPlanId(plan.id!);
 
-      const lineItems = (plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[];
+        if (existingInvoice) {
+          this.logger.warn(`Invoice already exists for sowPaymentPlanId: ${plan.id} — skipping`);
+          skipped++;
+          continue;
+        }
 
-      for (const lineItem of lineItems) {
-        const invoiceLineItem = new InvoiceLineItem();
-        invoiceLineItem.invoiceId  = createdInvoice.id!;
-        invoiceLineItem.orderNo    = lineItem.orderId;
-        invoiceLineItem.particular = lineItem.particular;
-        invoiceLineItem.rate       = lineItem.rate;
-        invoiceLineItem.unit       = lineItem.unit;
-        invoiceLineItem.total      = lineItem.total;
+        // Create new invoice
+        const invoice = new Invoice();
+        invoice.sowId             = plan.sowId;
+        invoice.customerId        = plan.customerId;
+        invoice.sowPaymentPlanId  = plan.id!;
+        invoice.status            = "Drafted";
+        invoice.totalInvoiceValue = plan.totalActualAmount;
+        invoice.invoiceAmount     = plan.totalActualAmount;
+        invoice.invoiceTaxAmount  = 0;
+        invoice.invoiceVersionNo  = 1;
 
-        await invoiceLineItem.save();
+        // Save via DbService
+        const createdInvoice = await this.invoiceDbService.createInvoice(invoice);
 
-        this.logger.info(`Invoice line item created for invoiceId: ${createdInvoice.id}`);
+        this.logger.info(`Invoice created with id: ${createdInvoice.id} for plan: ${plan.id}`);
+
+        // Get line items from the included association
+        const lineItems = (plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[];
+
+        // Copy each line item from plan to invoice
+        for (const lineItem of lineItems) {
+          const invoiceLineItem = new InvoiceLineItem();
+          invoiceLineItem.invoiceId  = createdInvoice.id!;
+          invoiceLineItem.orderNo    = lineItem.orderId;
+          invoiceLineItem.particular = lineItem.particular;
+          invoiceLineItem.rate       = lineItem.rate;
+          invoiceLineItem.unit       = lineItem.unit;
+          invoiceLineItem.total      = lineItem.total;
+
+          await this.invoiceLineItemDbService.createInvoiceLineItem(invoiceLineItem);
+
+          this.logger.info(`Invoice line item created for invoiceId: ${createdInvoice.id}`);
+        }
+
+        invoices.push({
+          id:                createdInvoice.id,
+          sowId:             createdInvoice.sowId,
+          sowPaymentPlanId:  createdInvoice.sowPaymentPlanId,
+          customerId:        createdInvoice.customerId,
+          status:            createdInvoice.status,
+          totalInvoiceValue: createdInvoice.totalInvoiceValue,
+          invoiceAmount:     createdInvoice.invoiceAmount,
+          invoiceTaxAmount:  createdInvoice.invoiceTaxAmount,
+          invoiceVersionNo:  createdInvoice.invoiceVersionNo,
+          createdAt:         createdInvoice.createdAt,
+          updatedAt:         createdInvoice.updatedAt,
+        });
       }
 
-      invoices.push({
-        id:                createdInvoice.id,
-        sowId:             createdInvoice.sowId,
-        sowPaymentPlanId:  createdInvoice.sowPaymentPlanId,
-        customerId:        createdInvoice.customerId,
-        status:            createdInvoice.status,
-        totalInvoiceValue: createdInvoice.totalInvoiceValue,
-        invoiceAmount:     createdInvoice.invoiceAmount,
-        invoiceTaxAmount:  createdInvoice.invoiceTaxAmount,
-        invoiceVersionNo:  createdInvoice.invoiceVersionNo,
-        createdAt:         createdInvoice.createdAt,
-        updatedAt:         createdInvoice.updatedAt,
-      });
+      this.logger.info(`Generated ${invoices.length} invoices, skipped ${skipped}`);
+      return { invoices, skipped };
+
+    } catch (error: any) {
+      this.logger.error("Error generating invoices for today", error);
+      throw error.status ? error : { status: 500, message: "Failed to generate invoices" };
     }
-
-    this.logger.info(`Generated ${invoices.length} invoices, skipped ${skipped}`);
-    return { invoices, skipped };
-
-  } catch (error: any) {
-    this.logger.error("Error generating invoices for today", error);
-    throw error.status ? error : { status: 500, message: "Failed to generate invoices" };
   }
-}
 
   async getAllInvoices(): Promise<IInvoice[]> {
     try {
-      const invoices = await Invoice.findAll();
+      const invoices = await this.invoiceDbService.findAllInvoices();
 
       this.logger.info(`Fetched ${invoices.length} invoices`);
 
@@ -136,14 +153,8 @@ async generateInvoicesForToday(date?: string): Promise<{ invoices: IInvoice[], s
 
   async getInvoiceById(id: string): Promise<IInvoice> {
     try {
-      const invoice = await Invoice.findByPk(id, {
-        include: [
-          {
-            model: InvoiceLineItem,
-            as: "InvoiceLineItems",
-          },
-        ],
-      });
+      // Fetch invoice with line items included via DbService
+      const invoice = await this.invoiceDbService.findInvoiceByIdWithLineItems(id);
 
       if (!invoice) {
         throw { status: 404, message: "Invoice not found" };
@@ -173,136 +184,10 @@ async generateInvoicesForToday(date?: string): Promise<{ invoices: IInvoice[], s
     }
   }
 
-async generateInvoicePdf(invoiceId: string): Promise<Buffer> {
-  try {
-    // Fetch invoice with its line items included in a single query
-    const invoice = await Invoice.findByPk(invoiceId, {
-      include: [
-        {
-          model: InvoiceLineItem,
-          as: "InvoiceLineItems",
-        },
-      ],
-    });
-
-    // If invoice doesn't exist throw 404
-    if (!invoice) {
-      throw { status: 404, message: "Invoice not found" };
-    }
-
-    // Extract line items from the included association
-    const lineItems = (invoice as any).InvoiceLineItems as InvoiceLineItem[];
-
-    // PDFKit works with streams so we wrap it in a Promise
-    // We collect all chunks into a buffer array and resolve when done
-    return new Promise((resolve, reject) => {
-      const PDFDocument    = require("pdfkit");
-      const doc            = new PDFDocument({ margin: 50 });
-      const buffers: Buffer[] = [];
-
-      // Every time PDFKit generates a chunk push it to buffers array
-      doc.on("data", (chunk: Buffer) => buffers.push(chunk));
-
-      // When PDF is fully generated merge all chunks into one Buffer and resolve
-      doc.on("end", () => resolve(Buffer.concat(buffers)));
-
-      // If anything goes wrong reject the promise
-      doc.on("error", reject);
-
-      // ─── HEADER ───────────────────────────────────────────────
-      doc.fontSize(20).font("Helvetica-Bold").text("INVOICE", { align: "center" });
-      doc.moveDown();
-
-      // Horizontal divider line
-      doc.fontSize(10).font("Helvetica");
-      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-      doc.moveDown(0.5);
-
-      // ─── INVOICE DETAILS SECTION ──────────────────────────────
-      doc.font("Helvetica-Bold").text("Invoice Details", { underline: true });
-      doc.moveDown(0.5);
-
-      // Print all invoice metadata fields
-      doc.font("Helvetica");
-      doc.text(`Invoice ID      : ${invoice.id}`);
-      doc.text(`SOW ID          : ${invoice.sowId}`);
-      doc.text(`Customer ID     : ${invoice.customerId}`);
-      doc.text(`Status          : ${invoice.status}`);
-      doc.text(`Invoice Amount  : $${invoice.invoiceAmount}`);
-      doc.text(`Tax Amount      : $${invoice.invoiceTaxAmount}`);
-      doc.text(`Total Value     : $${invoice.totalInvoiceValue}`);
-      doc.text(`Version No      : ${invoice.invoiceVersionNo}`);
-      doc.text(`Created At      : ${invoice.createdAt}`);
-
-      doc.moveDown();
-
-      // Horizontal divider line before line items
-      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-      doc.moveDown(0.5);
-
-      // ─── LINE ITEMS SECTION ───────────────────────────────────
-      doc.font("Helvetica-Bold").text("Line Items", { underline: true });
-      doc.moveDown(0.5);
-
-      // Table header row — each column positioned using x coordinates
-      doc.font("Helvetica-Bold");
-      doc.text("Order No",   50,  doc.y, { width: 100 });
-      doc.text("Particular", 150, doc.y - doc.currentLineHeight(), { width: 200 });
-      doc.text("Rate",       350, doc.y - doc.currentLineHeight(), { width: 70 });
-      doc.text("Unit",       420, doc.y - doc.currentLineHeight(), { width: 50 });
-      doc.text("Total",      470, doc.y - doc.currentLineHeight(), { width: 80 });
-      doc.moveDown(0.5);
-
-      // Divider line below table header
-      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-      doc.moveDown(0.3);
-
-      doc.font("Helvetica");
-      let runningTotal = 0;
-
-      // Loop through each line item and print a row in the table
-      // We track y position manually so all columns stay on the same row
-      for (const item of lineItems) {
-        const y = doc.y;
-        doc.text(item.orderNo,    50,  y, { width: 100 });
-        doc.text(item.particular, 150, y, { width: 200 });
-        doc.text(`$${item.rate}`, 350, y, { width: 70 });
-        doc.text(`${item.unit}`,  420, y, { width: 50 });
-        doc.text(`$${item.total}`,470, y, { width: 80 });
-        doc.moveDown(0.8);
-
-        // Add each line item total to running total for grand total calculation
-        runningTotal += item.total;
-      }
-
-      // ─── GRAND TOTAL ──────────────────────────────────────────
-      doc.moveDown(0.5);
-
-      // Divider line above grand total
-      doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-      doc.moveDown(0.5);
-
-      // Print grand total right aligned
-      doc.font("Helvetica-Bold");
-      doc.text(`Grand Total : $${runningTotal}`, { align: "right" });
-
-      // ─── FOOTER ───────────────────────────────────────────────
-      doc.moveDown();
-      doc.fontSize(8).font("Helvetica").fillColor("gray");
-      doc.text("Generated by CentraAPIs Invoice Management System", { align: "center" });
-
-      // Tell PDFKit we are done — this triggers the 'end' event
-      doc.end();
-    });
-  } catch (error: any) {
-    this.logger.error(`Error generating PDF for invoiceId: ${invoiceId}`, error);
-    throw error.status ? error : { status: 500, message: "Failed to generate invoice PDF" };
-  }
-}
-
   async approveInvoice(id: string): Promise<IInvoice> {
     try {
-      const invoice = await Invoice.findByPk(id);
+      // Fetch invoice to check current status
+      const invoice = await this.invoiceDbService.findInvoiceById(id);
 
       if (!invoice) {
         throw { status: 404, message: "Invoice not found" };
@@ -316,8 +201,8 @@ async generateInvoicePdf(invoiceId: string): Promise<Buffer> {
         throw { status: 409, message: "Cannot approve a cancelled invoice" };
       }
 
-      invoice.status = "Approved";
-      const updated = await invoice.save();
+      // Update status via DbService
+      const updated = await this.invoiceDbService.updateInvoiceStatus(id, "Approved");
 
       this.logger.info(`Invoice approved with id: ${id}`);
 
@@ -345,7 +230,8 @@ async generateInvoicePdf(invoiceId: string): Promise<Buffer> {
 
   async cancelInvoice(id: string): Promise<IInvoice> {
     try {
-      const invoice = await Invoice.findByPk(id);
+      // Fetch invoice to check current status
+      const invoice = await this.invoiceDbService.findInvoiceById(id);
 
       if (!invoice) {
         throw { status: 404, message: "Invoice not found" };
@@ -359,8 +245,8 @@ async generateInvoicePdf(invoiceId: string): Promise<Buffer> {
         throw { status: 409, message: "Cannot cancel an approved invoice" };
       }
 
-      invoice.status = "Cancelled";
-      const updated = await invoice.save();
+      // Update status via DbService
+      const updated = await this.invoiceDbService.updateInvoiceStatus(id, "Cancelled");
 
       this.logger.info(`Invoice cancelled with id: ${id}`);
 
@@ -383,6 +269,113 @@ async generateInvoicePdf(invoiceId: string): Promise<Buffer> {
     } catch (error: any) {
       this.logger.error(`Error cancelling invoice with id: ${id}`, error);
       throw error.status ? error : { status: 500, message: "Failed to cancel invoice" };
+    }
+  }
+
+  async generateInvoicePdf(invoiceId: string): Promise<Buffer> {
+    try {
+      // Fetch invoice with line items included via DbService
+      const invoice = await this.invoiceDbService.findInvoiceByIdWithLineItems(invoiceId);
+
+      if (!invoice) {
+        throw { status: 404, message: "Invoice not found" };
+      }
+
+      // Extract line items from the included association
+      const lineItems = (invoice as any).InvoiceLineItems as InvoiceLineItem[];
+
+      // PDFKit works with streams so we wrap it in a Promise
+      return new Promise((resolve, reject) => {
+        const PDFDocument       = require("pdfkit");
+        const doc               = new PDFDocument({ margin: 50 });
+        const buffers: Buffer[] = [];
+
+        // Collect all PDF chunks into buffer array
+        doc.on("data", (chunk: Buffer) => buffers.push(chunk));
+
+        // Merge all chunks and resolve when PDF is complete
+        doc.on("end", () => resolve(Buffer.concat(buffers)));
+
+        // Reject promise if error occurs
+        doc.on("error", reject);
+
+        // ─── HEADER ─────────────────────────────────────────────
+        doc.fontSize(20).font("Helvetica-Bold").text("INVOICE", { align: "center" });
+        doc.moveDown();
+
+        doc.fontSize(10).font("Helvetica");
+        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        doc.moveDown(0.5);
+
+        // ─── INVOICE DETAILS ────────────────────────────────────
+        doc.font("Helvetica-Bold").text("Invoice Details", { underline: true });
+        doc.moveDown(0.5);
+
+        doc.font("Helvetica");
+        doc.text(`Invoice ID      : ${invoice.id}`);
+        doc.text(`SOW ID          : ${invoice.sowId}`);
+        doc.text(`Customer ID     : ${invoice.customerId}`);
+        doc.text(`Status          : ${invoice.status}`);
+        doc.text(`Invoice Amount  : $${invoice.invoiceAmount}`);
+        doc.text(`Tax Amount      : $${invoice.invoiceTaxAmount}`);
+        doc.text(`Total Value     : $${invoice.totalInvoiceValue}`);
+        doc.text(`Version No      : ${invoice.invoiceVersionNo}`);
+        doc.text(`Created At      : ${invoice.createdAt}`);
+
+        doc.moveDown();
+        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        doc.moveDown(0.5);
+
+        // ─── LINE ITEMS TABLE ────────────────────────────────────
+        doc.font("Helvetica-Bold").text("Line Items", { underline: true });
+        doc.moveDown(0.5);
+
+        // Table header row
+        doc.font("Helvetica-Bold");
+        doc.text("Order No",   50,  doc.y, { width: 100 });
+        doc.text("Particular", 150, doc.y - doc.currentLineHeight(), { width: 200 });
+        doc.text("Rate",       350, doc.y - doc.currentLineHeight(), { width: 70 });
+        doc.text("Unit",       420, doc.y - doc.currentLineHeight(), { width: 50 });
+        doc.text("Total",      470, doc.y - doc.currentLineHeight(), { width: 80 });
+        doc.moveDown(0.5);
+
+        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        doc.moveDown(0.3);
+
+        doc.font("Helvetica");
+        let runningTotal = 0;
+
+        // Print each line item row — track y position manually for columns
+        for (const item of lineItems) {
+          const y = doc.y;
+          doc.text(item.orderNo,    50,  y, { width: 100 });
+          doc.text(item.particular, 150, y, { width: 200 });
+          doc.text(`$${item.rate}`, 350, y, { width: 70 });
+          doc.text(`${item.unit}`,  420, y, { width: 50 });
+          doc.text(`$${item.total}`,470, y, { width: 80 });
+          doc.moveDown(0.8);
+          runningTotal += item.total;
+        }
+
+        // ─── GRAND TOTAL ─────────────────────────────────────────
+        doc.moveDown(0.5);
+        doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        doc.moveDown(0.5);
+
+        doc.font("Helvetica-Bold");
+        doc.text(`Grand Total : $${runningTotal}`, { align: "right" });
+
+        // ─── FOOTER ──────────────────────────────────────────────
+        doc.moveDown();
+        doc.fontSize(8).font("Helvetica").fillColor("gray");
+        doc.text("Generated by CentraAPIs Invoice Management System", { align: "center" });
+
+        // Signal PDFKit that we are done — triggers 'end' event
+        doc.end();
+      });
+    } catch (error: any) {
+      this.logger.error(`Error generating PDF for invoiceId: ${invoiceId}`, error);
+      throw error.status ? error : { status: 500, message: "Failed to generate invoice PDF" };
     }
   }
 }

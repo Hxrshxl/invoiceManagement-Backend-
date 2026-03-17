@@ -1,22 +1,18 @@
 import { Router, Request, Response } from "express";
-import container from "../config/container";
+import { container } from "../app";
 import TYPES from "../types/inversifyTypes";
 import CustomerController from "../controllers/customerController";
 
 const customerRouter = Router();
 
-const customerController = container.get<CustomerController>(TYPES.CustomerController);
-
 customerRouter.post("/createCustomer", (req: Request, res: Response) => {
-  customerController.createCustomerHandler(req, res);
+  container.get<CustomerController>(TYPES.CustomerController).createCustomerHandler(req, res);
 });
-
 customerRouter.post("/getAllCustomers", (req: Request, res: Response) => {
-  customerController.getAllCustomersHandler(req, res);
+  container.get<CustomerController>(TYPES.CustomerController).getAllCustomersHandler(req, res);
 });
-
 customerRouter.post("/getCustomerById", (req: Request, res: Response) => {
-  customerController.getCustomerByIdHandler(req, res);
+  container.get<CustomerController>(TYPES.CustomerController).getCustomerByIdHandler(req, res);
 });
 
 export default customerRouter;

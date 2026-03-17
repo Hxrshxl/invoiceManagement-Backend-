@@ -1,41 +1,49 @@
 import { injectable, inject } from "inversify";
 import { Logger } from "winston";
-import Payment from "../models/paymentModel";
-import Invoice from "../models/invoiceModel";
-import { CreatePaymentDto } from "../dto/createPaymentDto";
-import { IPayment } from "../interfaces/paymentInterface";
 import TYPES from "../types/inversifyTypes";
+import Payment from "../models/paymentModel";
+import { CreatePaymentDto } from "../dto/createPaymentDto";
+import { IPaymentDbService, IInvoiceDbService } from "../postgresDB/pgInterface";
+import { IPayment } from "../interfaces/paymentInterface";
 
 @injectable()
 class PaymentService {
   constructor(
+    @inject(TYPES.PaymentDbService)
+    private readonly paymentDbService: IPaymentDbService,
+
+    @inject(TYPES.InvoiceDbService)
+    private readonly invoiceDbService: IInvoiceDbService,
+
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
 
   async createPayment(dto: CreatePaymentDto): Promise<IPayment> {
     try {
-      const invoice = await Invoice.findByPk(dto.invoiceId);
+      // Check invoice exists
+      const invoice = await this.invoiceDbService.findInvoiceById(dto.invoiceId);
       if (!invoice) {
         throw { status: 404, message: "Invoice not found" };
       }
 
+      // Cannot pay a Drafted invoice — must be approved first
       if (invoice.status === "Drafted") {
         throw { status: 400, message: "Cannot record payment for a Drafted invoice — please approve it first" };
       }
 
+      // Cannot pay a Cancelled invoice
       if (invoice.status === "Cancelled") {
         throw { status: 400, message: "Cannot record payment for a Cancelled invoice" };
       }
 
-      const existingPayment = await Payment.findOne({
-        where: { invoiceId: dto.invoiceId },
-      });
-
+      // Check if payment already exists for this invoice
+      const existingPayment = await this.paymentDbService.findPaymentByInvoiceId(dto.invoiceId);
       if (existingPayment) {
         throw { status: 409, message: "Payment already recorded for this invoice" };
       }
 
+      // Map fields explicitly onto model instance
       const payment = new Payment();
       payment.invoiceId     = dto.invoiceId;
       payment.paymentDate   = dto.paymentDate;
@@ -46,11 +54,15 @@ class PaymentService {
       payment.bankPayment   = dto.bankPayment ?? "";
       payment.details       = dto.details ?? "";
 
-      const created = await payment.save();
+      // Save payment via DbService
+      const created = await this.paymentDbService.createPayment(payment);
 
-      invoice.paymentReceivedOn = dto.paymentDate;
-      invoice.paymentId         = created.id!;
-      await invoice.save();
+      // Update invoice with payment details via DbService
+      await this.invoiceDbService.updateInvoicePayment(
+        dto.invoiceId,
+        created.id!,
+        dto.paymentDate
+      );
 
       this.logger.info(`Payment created successfully with id: ${created.id}`);
 
@@ -75,15 +87,14 @@ class PaymentService {
 
   async getPaymentByInvoiceId(invoiceId: string): Promise<IPayment> {
     try {
-      const invoice = await Invoice.findByPk(invoiceId);
+      // Check invoice exists first
+      const invoice = await this.invoiceDbService.findInvoiceById(invoiceId);
       if (!invoice) {
         throw { status: 404, message: "Invoice not found" };
       }
 
-      const payment = await Payment.findOne({
-        where: { invoiceId },
-      });
-
+      // Fetch payment via DbService
+      const payment = await this.paymentDbService.findPaymentByInvoiceId(invoiceId);
       if (!payment) {
         throw { status: 404, message: "No payment found for this invoice" };
       }

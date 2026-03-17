@@ -2,18 +2,23 @@ import { injectable, inject } from "inversify";
 import { Logger } from "winston";
 import TYPES from "../types/inversifyTypes";
 import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
-import { ISowPaymentPlanLineItem } from "../interfaces/sowPaymentPlanLineItemInterface";
 import { CreateSowPaymentPlanLineItemDto } from "../dto/createSowPaymentPlanLineItemDto";
+import { ISowPaymentPlanLineItemDbService } from "../postgresDB/pgInterface";
+import { ISowPaymentPlanLineItem } from "../interfaces/sowPaymentPlanLineItemInterface";
 
 @injectable()
 class SowPaymentPlanLineItemService {
   constructor(
+    @inject(TYPES.SowPaymentPlanLineItemDbService)
+    private readonly sowPaymentPlanLineItemDbService: ISowPaymentPlanLineItemDbService,
+
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
 
   async createSowPaymentPlanLineItem(dto: CreateSowPaymentPlanLineItemDto): Promise<ISowPaymentPlanLineItem> {
     try {
+      // Map fields explicitly onto model instance
       const lineItem = new SowPaymentPlanLineItem();
       lineItem.sowPaymentPlanId = dto.sowPaymentPlanId;
       lineItem.sowId            = dto.sowId;
@@ -23,7 +28,8 @@ class SowPaymentPlanLineItemService {
       lineItem.unit             = dto.unit;
       lineItem.total            = dto.total;
 
-      const created = await lineItem.save();
+      // Save via DbService
+      const created = await this.sowPaymentPlanLineItemDbService.createSowPaymentPlanLineItem(lineItem);
 
       this.logger.info(`SOW Payment Plan Line Item created successfully with id: ${created.id}`);
 
@@ -47,7 +53,7 @@ class SowPaymentPlanLineItemService {
 
   async getAllSowPaymentPlanLineItems(): Promise<ISowPaymentPlanLineItem[]> {
     try {
-      const lineItems = await SowPaymentPlanLineItem.findAll();
+      const lineItems = await this.sowPaymentPlanLineItemDbService.findAllSowPaymentPlanLineItems();
 
       this.logger.info(`Fetched ${lineItems.length} SOW Payment Plan Line Items`);
 
@@ -71,9 +77,7 @@ class SowPaymentPlanLineItemService {
 
   async getSowPaymentPlanLineItemsByPlanId(sowPaymentPlanId: string): Promise<ISowPaymentPlanLineItem[]> {
     try {
-      const lineItems = await SowPaymentPlanLineItem.findAll({
-        where: { sowPaymentPlanId },
-      });
+      const lineItems = await this.sowPaymentPlanLineItemDbService.findSowPaymentPlanLineItemsByPlanId(sowPaymentPlanId);
 
       if (!lineItems.length) {
         throw { status: 404, message: "No line items found for this SOW Payment Plan" };
