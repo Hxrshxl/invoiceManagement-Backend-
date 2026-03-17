@@ -1,6 +1,5 @@
 import "reflect-metadata";
 import { Container } from "inversify";
-import TYPES from "../types/inversifyTypes";
 import logger from "./logger";
 
 import OrganizationService from "../services/organizationService";
@@ -17,6 +16,9 @@ import InvoiceService from "../services/invoiceService";
 import InvoiceController from "../controllers/invoiceController";
 import InvoiceLineItemService from "../services/invoiceLineItemService";
 import InvoiceLineItemController from "../controllers/invoiceLineItemController";
+import PaymentService from "../services/paymentService";
+import PaymentController from "../controllers/paymentController";
+import TYPES from "../types/inversifyTypes";
 
 const container = new Container();
 
@@ -42,5 +44,8 @@ container.bind(TYPES.InvoiceController).to(InvoiceController).inSingletonScope()
 
 container.bind(TYPES.InvoiceLineItemService).to(InvoiceLineItemService).inSingletonScope();
 container.bind(TYPES.InvoiceLineItemController).to(InvoiceLineItemController).inSingletonScope();
+
+container.bind(TYPES.PaymentService).to(PaymentService).inSingletonScope();
+container.bind(TYPES.PaymentController).to(PaymentController).inSingletonScope();
 
 export default container;
