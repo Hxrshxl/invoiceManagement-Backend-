@@ -143,7 +143,6 @@ export class SowPaymentPlanDbService implements ISowPaymentPlanDbService {
 }
 
   async findSowPaymentPlansWithInvoices(): Promise<SowPaymentPlan[]> {
-    // Fetch all plans with their associated invoices for schedule view
     return await SowPaymentPlan.findAll({
       include: [
         {
