@@ -68,33 +68,40 @@ async getAllInvoicesHandler(_req: Request, res: Response): Promise<void> {
   }
 
 async getInvoiceByIdHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const dto = plainToClass(GetInvoiceByIdDto, req.body);
-      const errors = await validate(dto);
+  try {
+    const { id, export: exportPdf } = req.body;
 
-      if (errors.length > 0) {
-        res.status(400).json({
-          success: false,
-          message: "Validation failed",
-          errors: errors.map((e) => Object.values(e.constraints || {})).flat(),
-        });
-        return;
-      }
-
-      const invoice = await this.invoiceService.getInvoiceById(dto.id);
-      res.status(200).json({
-        success: true,
-        message: "Invoice fetched successfully",
-        data: invoice,
-      });
-    } catch (error: any) {
-      this.logger.error("Error in getInvoiceByIdHandler", error);
-      res.status(error.status || 500).json({
+    if (!id) {
+      res.status(400).json({
         success: false,
-        message: error.message || "Internal server error",
+        message: "Id is required",
       });
+      return;
     }
+
+    if (exportPdf === true) {
+      const pdfBuffer = await this.invoiceService.generateInvoicePdf(id);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename=invoice-${id}.pdf`);
+      res.send(pdfBuffer);
+      return;
+    }
+
+    const invoice = await this.invoiceService.getInvoiceById(id);
+    res.status(200).json({
+      success: true,
+      message: "Invoice fetched successfully",
+      data: invoice,
+    });
+  } catch (error: any) {
+    this.logger.error("Error in getInvoiceByIdHandler", error);
+    res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Internal server error",
+    });
   }
+}
+
 
 async approveInvoiceHandler(req: Request, res: Response): Promise<void> {
     try {
