@@ -1,5 +1,8 @@
 export interface IInvoice {
   id?: string;
+  invoiceUId?: string;
+  version?: number;
+  archive?: boolean;
   sowId: string;
   sowPaymentPlanId: string;
   customerId: string;

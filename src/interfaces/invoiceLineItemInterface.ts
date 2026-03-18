@@ -1,5 +1,8 @@
 export interface IInvoiceLineItem {
   id?: string;
+  invoiceLineItemUId?: string;
+  version?: number;
+  archive?: boolean;
   invoiceId: string;
   orderNo: string;
   particular: string;

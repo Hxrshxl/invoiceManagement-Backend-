@@ -1,9 +1,10 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../postgresDB/pgConfig";
-import { ISowPaymentPlan } from "../interfaces/sowPaymentPlanInterface";
 import { BaseEntity } from "./baseEntity";
+import { ISowPaymentPlan } from "../interfaces/sowPaymentPlanInterface";
 
 class SowPaymentPlan extends BaseEntity implements ISowPaymentPlan {
+  public sowPaymentPlanUId!: string;
   public sowId!: string;
   public customerId!: string;
   public plannedInvoiceDate!: Date;
@@ -13,6 +14,11 @@ class SowPaymentPlan extends BaseEntity implements ISowPaymentPlan {
 SowPaymentPlan.init(
   {
     ...BaseEntity.baseFields,
+    sowPaymentPlanUId: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+    },
     sowId: {
       type: DataTypes.UUID,
       allowNull: false,

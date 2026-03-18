@@ -1,6 +1,5 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { injectable, inject } from "inversify";
-import { Request, Response } from "express";
 import TYPES from "../types/inversifyTypes";
 import PaymentController from "../controllers/paymentController";
 
@@ -22,6 +21,12 @@ export class PaymentRoutes {
     );
     this.router.post("/getPaymentByInvoiceId", (req: Request, res: Response) =>
       this.controller.getPaymentByInvoiceIdHandler(req, res)
+    );
+    this.router.post("/updatePayment", (req: Request, res: Response) =>
+      this.controller.updatePaymentHandler(req, res)
+    );
+    this.router.post("/deletePayment", (req: Request, res: Response) =>
+      this.controller.deletePaymentHandler(req, res)
     );
   }
 

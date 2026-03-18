@@ -1,5 +1,8 @@
 export interface ICustomer {
   id?: string;
+  customerUId?: string;
+  version?: number;
+  archive?: boolean;
   organizationId: string;
   legalName: string;
   shortName: string;

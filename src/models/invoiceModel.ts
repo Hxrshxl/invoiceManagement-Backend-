@@ -1,9 +1,10 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../postgresDB/pgConfig";
-import { IInvoice } from "../interfaces/invoiceInterface";
 import { BaseEntity } from "./baseEntity";
+import { IInvoice } from "../interfaces/invoiceInterface";
 
 class Invoice extends BaseEntity implements IInvoice {
+  public invoiceUId!: string;
   public sowId!: string;
   public sowPaymentPlanId!: string;
   public customerId!: string;
@@ -20,6 +21,11 @@ class Invoice extends BaseEntity implements IInvoice {
 Invoice.init(
   {
     ...BaseEntity.baseFields,
+    invoiceUId: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+    },
     sowId: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -87,4 +93,4 @@ Invoice.init(
   }
 );
 
-export default Invoice; 
+export default Invoice;

@@ -1,5 +1,8 @@
 export interface ISowPaymentPlanLineItem {
   id?: string;
+  sowPaymentPlanLineItemUId?: string;
+  version?: number;
+  archive?: boolean;
   sowPaymentPlanId: string;
   sowId: string;
   orderId: string;

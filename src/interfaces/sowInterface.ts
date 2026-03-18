@@ -1,5 +1,8 @@
 export interface ISow {
   id?: string;
+  sowUId?: string;
+  version?: number;
+  archive?: boolean;
   customerId: string;
   title: string;
   totalValue: number;

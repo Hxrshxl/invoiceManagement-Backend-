@@ -1,6 +1,5 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { injectable, inject } from "inversify";
-import { Request, Response } from "express";
 import TYPES from "../types/inversifyTypes";
 import SowPaymentPlanController from "../controllers/sowPaymentPlanController";
 
@@ -28,6 +27,12 @@ export class SowPaymentPlanRoutes {
     );
     this.router.post("/getSowPaymentPlansBySowId", (req: Request, res: Response) =>
       this.controller.getSowPaymentPlansBySowIdHandler(req, res)
+    );
+    this.router.post("/updateSowPaymentPlan", (req: Request, res: Response) =>
+      this.controller.updateSowPaymentPlanHandler(req, res)
+    );
+    this.router.post("/deleteSowPaymentPlan", (req: Request, res: Response) =>
+      this.controller.deleteSowPaymentPlanHandler(req, res)
     );
     this.router.post("/getInvoiceSchedule", (req: Request, res: Response) =>
       this.controller.getInvoiceScheduleHandler(req, res)

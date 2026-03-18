@@ -1,9 +1,10 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../postgresDB/pgConfig";
-import { ICustomer } from "../interfaces/customerInterface";
 import { BaseEntity } from "./baseEntity";
+import { ICustomer } from "../interfaces/customerInterface";
 
 class Customer extends BaseEntity implements ICustomer {
+  public customerUId!: string;
   public organizationId!: string;
   public legalName!: string;
   public shortName!: string;
@@ -22,6 +23,11 @@ class Customer extends BaseEntity implements ICustomer {
 Customer.init(
   {
     ...BaseEntity.baseFields,
+    customerUId: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+    },
     organizationId: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -33,7 +39,6 @@ Customer.init(
     legalName: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     shortName: {
       type: DataTypes.STRING,

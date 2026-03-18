@@ -1,6 +1,5 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { injectable, inject } from "inversify";
-import { Request, Response } from "express";
 import TYPES from "../types/inversifyTypes";
 import InvoiceController from "../controllers/invoiceController";
 
@@ -31,6 +30,12 @@ export class InvoiceRoutes {
     );
     this.router.post("/cancelInvoice", (req: Request, res: Response) =>
       this.controller.cancelInvoiceHandler(req, res)
+    );
+    this.router.post("/updateInvoice", (req: Request, res: Response) =>
+      this.controller.updateInvoiceHandler(req, res)
+    );
+    this.router.post("/deleteInvoice", (req: Request, res: Response) =>
+      this.controller.deleteInvoiceHandler(req, res)
     );
   }
 

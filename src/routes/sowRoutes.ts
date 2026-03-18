@@ -1,6 +1,5 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { injectable, inject } from "inversify";
-import { Request, Response } from "express";
 import TYPES from "../types/inversifyTypes";
 import SowController from "../controllers/sowController";
 
@@ -25,6 +24,12 @@ export class SowRoutes {
     );
     this.router.post("/getSowById", (req: Request, res: Response) =>
       this.controller.getSowByIdHandler(req, res)
+    );
+    this.router.post("/updateSow", (req: Request, res: Response) =>
+      this.controller.updateSowHandler(req, res)
+    );
+    this.router.post("/deleteSow", (req: Request, res: Response) =>
+      this.controller.deleteSowHandler(req, res)
     );
   }
 

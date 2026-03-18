@@ -1,9 +1,10 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../postgresDB/pgConfig";
-import { IPayment } from "../interfaces/paymentInterface";
 import { BaseEntity } from "./baseEntity";
+import { IPayment } from "../interfaces/paymentInterface";
 
 class Payment extends BaseEntity implements IPayment {
+  public paymentUId!: string;
   public invoiceId!: string;
   public paymentDate!: Date;
   public forExAmount!: number;
@@ -17,6 +18,11 @@ class Payment extends BaseEntity implements IPayment {
 Payment.init(
   {
     ...BaseEntity.baseFields,
+    paymentUId: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+    },
     invoiceId: {
       type: DataTypes.UUID,
       allowNull: false,

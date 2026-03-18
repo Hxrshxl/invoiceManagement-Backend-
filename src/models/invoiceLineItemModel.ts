@@ -1,9 +1,10 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../postgresDB/pgConfig";
-import { IInvoiceLineItem } from "../interfaces/invoiceLineItemInterface";
 import { BaseEntity } from "./baseEntity";
+import { IInvoiceLineItem } from "../interfaces/invoiceLineItemInterface";
 
 class InvoiceLineItem extends BaseEntity implements IInvoiceLineItem {
+  public invoiceLineItemUId!: string;
   public invoiceId!: string;
   public orderNo!: string;
   public particular!: string;
@@ -15,6 +16,11 @@ class InvoiceLineItem extends BaseEntity implements IInvoiceLineItem {
 InvoiceLineItem.init(
   {
     ...BaseEntity.baseFields,
+    invoiceLineItemUId: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+    },
     invoiceId: {
       type: DataTypes.UUID,
       allowNull: false,

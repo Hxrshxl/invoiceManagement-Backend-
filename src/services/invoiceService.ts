@@ -4,12 +4,13 @@ import TYPES from "../types/inversifyTypes";
 import Invoice from "../models/invoiceModel";
 import InvoiceLineItem from "../models/invoiceLineItemModel";
 import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
+import { IInvoice } from "../interfaces/invoiceInterface";
+import { UpdateInvoiceDto } from "../dto/updateInvoiceDto";
 import {
   IInvoiceDbService,
   IInvoiceLineItemDbService,
   ISowPaymentPlanDbService,
 } from "../postgresDB/pgInterface";
-import { IInvoice } from "../interfaces/invoiceInterface";
 
 @injectable()
 class InvoiceService {
@@ -27,22 +28,43 @@ class InvoiceService {
     private readonly logger: Logger
   ) {}
 
+  private mapToInterface(invoice: Invoice): IInvoice {
+    return {
+      id:                invoice.id,
+      invoiceUId:        invoice.invoiceUId,
+      version:           invoice.version,
+      archive:           invoice.archive,
+      sowId:             invoice.sowId,
+      sowPaymentPlanId:  invoice.sowPaymentPlanId,
+      customerId:        invoice.customerId,
+      status:            invoice.status,
+      totalInvoiceValue: invoice.totalInvoiceValue,
+      invoiceAmount:     invoice.invoiceAmount,
+      invoiceTaxAmount:  invoice.invoiceTaxAmount,
+      invoiceSentOn:     invoice.invoiceSentOn,
+      paymentReceivedOn: invoice.paymentReceivedOn,
+      invoiceVersionNo:  invoice.invoiceVersionNo,
+      paymentId:         invoice.paymentId,
+      createdAt:         invoice.createdAt,
+      updatedAt:         invoice.updatedAt,
+    };
+  }
+
   async generateInvoicesForToday(date?: string): Promise<{ invoices: IInvoice[], skipped: number }> {
     try {
-      // Use provided date or default to today
-     let today: string;
-        if (date) {
-          today = date;
-        } else {
-          const now   = new Date();
-          const year  = now.getFullYear();
-          const month = String(now.getMonth() + 1).padStart(2, "0");
-          const day   = String(now.getDate()).padStart(2, "0");
-          today       = `${year}-${month}-${day}`;
-        }
+      let today: string;
+      if (date) {
+        today = date;
+      } else {
+        const now   = new Date();
+        const year  = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day   = String(now.getDate()).padStart(2, "0");
+        today       = `${year}-${month}-${day}`;
+      }
+
       this.logger.info(`Generating invoices for date: ${today}`);
 
-      // Fetch all plans due on this date with line items included via DbService
       const duePlans = await this.sowPaymentPlanDbService.findSowPaymentPlansByDate(today);
 
       if (!duePlans.length) {
@@ -56,16 +78,13 @@ class InvoiceService {
       let skipped = 0;
 
       for (const plan of duePlans) {
-        // Check if invoice already exists for this plan
         const existingInvoice = await this.invoiceDbService.findInvoiceBySowPaymentPlanId(plan.id!);
-
         if (existingInvoice) {
           this.logger.warn(`Invoice already exists for sowPaymentPlanId: ${plan.id} — skipping`);
           skipped++;
           continue;
         }
 
-        // Create new invoice
         const invoice = new Invoice();
         invoice.sowId             = plan.sowId;
         invoice.customerId        = plan.customerId;
@@ -75,16 +94,14 @@ class InvoiceService {
         invoice.invoiceAmount     = plan.totalActualAmount;
         invoice.invoiceTaxAmount  = 0;
         invoice.invoiceVersionNo  = 1;
+        invoice.version           = 1;
+        invoice.archive           = false;
 
-        // Save via DbService
         const createdInvoice = await this.invoiceDbService.createInvoice(invoice);
-
         this.logger.info(`Invoice created with id: ${createdInvoice.id} for plan: ${plan.id}`);
 
-        // Get line items from the included association
         const lineItems = (plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[];
 
-        // Copy each line item from plan to invoice
         for (const lineItem of lineItems) {
           const invoiceLineItem = new InvoiceLineItem();
           invoiceLineItem.invoiceId  = createdInvoice.id!;
@@ -93,30 +110,17 @@ class InvoiceService {
           invoiceLineItem.rate       = lineItem.rate;
           invoiceLineItem.unit       = lineItem.unit;
           invoiceLineItem.total      = lineItem.total;
+          invoiceLineItem.version    = 1;
+          invoiceLineItem.archive    = false;
 
           await this.invoiceLineItemDbService.createInvoiceLineItem(invoiceLineItem);
-
-          this.logger.info(`Invoice line item created for invoiceId: ${createdInvoice.id}`);
         }
 
-        invoices.push({
-          id:                createdInvoice.id,
-          sowId:             createdInvoice.sowId,
-          sowPaymentPlanId:  createdInvoice.sowPaymentPlanId,
-          customerId:        createdInvoice.customerId,
-          status:            createdInvoice.status,
-          totalInvoiceValue: createdInvoice.totalInvoiceValue,
-          invoiceAmount:     createdInvoice.invoiceAmount,
-          invoiceTaxAmount:  createdInvoice.invoiceTaxAmount,
-          invoiceVersionNo:  createdInvoice.invoiceVersionNo,
-          createdAt:         createdInvoice.createdAt,
-          updatedAt:         createdInvoice.updatedAt,
-        });
+        invoices.push(this.mapToInterface(createdInvoice));
       }
 
       this.logger.info(`Generated ${invoices.length} invoices, skipped ${skipped}`);
       return { invoices, skipped };
-
     } catch (error: any) {
       this.logger.error("Error generating invoices for today", error);
       throw error.status ? error : { status: 500, message: "Failed to generate invoices" };
@@ -126,193 +130,152 @@ class InvoiceService {
   async getAllInvoices(): Promise<IInvoice[]> {
     try {
       const invoices = await this.invoiceDbService.findAllInvoices();
-
       this.logger.info(`Fetched ${invoices.length} invoices`);
-
-      return invoices.map((invoice) => ({
-        id:                invoice.id,
-        sowId:             invoice.sowId,
-        sowPaymentPlanId:  invoice.sowPaymentPlanId,
-        customerId:        invoice.customerId,
-        status:            invoice.status,
-        totalInvoiceValue: invoice.totalInvoiceValue,
-        invoiceAmount:     invoice.invoiceAmount,
-        invoiceTaxAmount:  invoice.invoiceTaxAmount,
-        invoiceSentOn:     invoice.invoiceSentOn,
-        paymentReceivedOn: invoice.paymentReceivedOn,
-        invoiceVersionNo:  invoice.invoiceVersionNo,
-        paymentId:         invoice.paymentId,
-        createdAt:         invoice.createdAt,
-        updatedAt:         invoice.updatedAt,
-      }));
+      return invoices.map((i) => this.mapToInterface(i));
     } catch (error: any) {
       this.logger.error("Error fetching invoices", error);
       throw error.status ? error : { status: 500, message: "Failed to fetch invoices" };
     }
   }
 
-  async getInvoiceById(id: string): Promise<IInvoice> {
+  async getInvoiceById(invoiceUId: string): Promise<IInvoice> {
     try {
-      // Fetch invoice with line items included via DbService
-      const invoice = await this.invoiceDbService.findInvoiceByIdWithLineItems(id);
-
+      const invoice = await this.invoiceDbService.findInvoiceByUId(invoiceUId);
       if (!invoice) {
         throw { status: 404, message: "Invoice not found" };
       }
-
-      this.logger.info(`Fetched invoice with id: ${id}`);
-
-      return {
-        id:                invoice.id,
-        sowId:             invoice.sowId,
-        sowPaymentPlanId:  invoice.sowPaymentPlanId,
-        customerId:        invoice.customerId,
-        status:            invoice.status,
-        totalInvoiceValue: invoice.totalInvoiceValue,
-        invoiceAmount:     invoice.invoiceAmount,
-        invoiceTaxAmount:  invoice.invoiceTaxAmount,
-        invoiceSentOn:     invoice.invoiceSentOn,
-        paymentReceivedOn: invoice.paymentReceivedOn,
-        invoiceVersionNo:  invoice.invoiceVersionNo,
-        paymentId:         invoice.paymentId,
-        createdAt:         invoice.createdAt,
-        updatedAt:         invoice.updatedAt,
-      };
+      this.logger.info(`Fetched invoice with UId: ${invoiceUId}`);
+      return this.mapToInterface(invoice);
     } catch (error: any) {
-      this.logger.error(`Error fetching invoice with id: ${id}`, error);
+      this.logger.error(`Error fetching invoice with UId: ${invoiceUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch invoice" };
     }
   }
 
-  async approveInvoice(id: string): Promise<IInvoice> {
+  async approveInvoice(invoiceUId: string): Promise<IInvoice> {
     try {
-      // Fetch invoice to check current status
-      const invoice = await this.invoiceDbService.findInvoiceById(id);
-
+      const invoice = await this.invoiceDbService.findInvoiceByUId(invoiceUId);
       if (!invoice) {
         throw { status: 404, message: "Invoice not found" };
       }
-
       if (invoice.status === "Approved") {
         throw { status: 409, message: "Invoice is already approved" };
       }
-
       if (invoice.status === "Cancelled") {
         throw { status: 409, message: "Cannot approve a cancelled invoice" };
       }
 
-      // Update status via DbService
-      const updated = await this.invoiceDbService.updateInvoiceStatus(id, "Approved");
-
-      this.logger.info(`Invoice approved with id: ${id}`);
-
-      return {
-        id:                updated.id,
-        sowId:             updated.sowId,
-        sowPaymentPlanId:  updated.sowPaymentPlanId,
-        customerId:        updated.customerId,
-        status:            updated.status,
-        totalInvoiceValue: updated.totalInvoiceValue,
-        invoiceAmount:     updated.invoiceAmount,
-        invoiceTaxAmount:  updated.invoiceTaxAmount,
-        invoiceSentOn:     updated.invoiceSentOn,
-        paymentReceivedOn: updated.paymentReceivedOn,
-        invoiceVersionNo:  updated.invoiceVersionNo,
-        paymentId:         updated.paymentId,
-        createdAt:         updated.createdAt,
-        updatedAt:         updated.updatedAt,
-      };
+      const updated = await this.invoiceDbService.updateInvoiceStatus(invoice.id!, "Approved");
+      this.logger.info(`Invoice approved with UId: ${invoiceUId}`);
+      return this.mapToInterface(updated);
     } catch (error: any) {
-      this.logger.error(`Error approving invoice with id: ${id}`, error);
+      this.logger.error(`Error approving invoice with UId: ${invoiceUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to approve invoice" };
     }
   }
 
-  async cancelInvoice(id: string): Promise<IInvoice> {
+  async cancelInvoice(invoiceUId: string): Promise<IInvoice> {
     try {
-      // Fetch invoice to check current status
-      const invoice = await this.invoiceDbService.findInvoiceById(id);
-
+      const invoice = await this.invoiceDbService.findInvoiceByUId(invoiceUId);
       if (!invoice) {
         throw { status: 404, message: "Invoice not found" };
       }
-
       if (invoice.status === "Cancelled") {
         throw { status: 409, message: "Invoice is already cancelled" };
       }
-
       if (invoice.status === "Approved") {
         throw { status: 409, message: "Cannot cancel an approved invoice" };
       }
 
-      // Update status via DbService
-      const updated = await this.invoiceDbService.updateInvoiceStatus(id, "Cancelled");
-
-      this.logger.info(`Invoice cancelled with id: ${id}`);
-
-      return {
-        id:                updated.id,
-        sowId:             updated.sowId,
-        sowPaymentPlanId:  updated.sowPaymentPlanId,
-        customerId:        updated.customerId,
-        status:            updated.status,
-        totalInvoiceValue: updated.totalInvoiceValue,
-        invoiceAmount:     updated.invoiceAmount,
-        invoiceTaxAmount:  updated.invoiceTaxAmount,
-        invoiceSentOn:     updated.invoiceSentOn,
-        paymentReceivedOn: updated.paymentReceivedOn,
-        invoiceVersionNo:  updated.invoiceVersionNo,
-        paymentId:         updated.paymentId,
-        createdAt:         updated.createdAt,
-        updatedAt:         updated.updatedAt,
-      };
+      const updated = await this.invoiceDbService.updateInvoiceStatus(invoice.id!, "Cancelled");
+      this.logger.info(`Invoice cancelled with UId: ${invoiceUId}`);
+      return this.mapToInterface(updated);
     } catch (error: any) {
-      this.logger.error(`Error cancelling invoice with id: ${id}`, error);
+      this.logger.error(`Error cancelling invoice with UId: ${invoiceUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to cancel invoice" };
     }
   }
 
-  async generateInvoicePdf(invoiceId: string): Promise<Buffer> {
+  async updateInvoice(dto: UpdateInvoiceDto): Promise<IInvoice> {
     try {
-      // Fetch invoice with line items included via DbService
-      const invoice = await this.invoiceDbService.findInvoiceByIdWithLineItems(invoiceId);
+      const existing = await this.invoiceDbService.findInvoiceByUId(dto.invoiceUId);
+      if (!existing) {
+        throw { status: 404, message: "Invoice not found" };
+      }
 
+      // Archive old version
+      await this.invoiceDbService.archiveInvoice(existing.id!);
+
+      // Create new version with updated fields
+      const updated = new Invoice();
+      updated.invoiceUId        = existing.invoiceUId;
+      updated.version           = existing.version + 1;
+      updated.archive           = false;
+      updated.sowId             = existing.sowId;
+      updated.sowPaymentPlanId  = existing.sowPaymentPlanId;
+      updated.customerId        = existing.customerId;
+      updated.status            = dto.status            ?? existing.status;
+      updated.totalInvoiceValue = dto.totalInvoiceValue ?? existing.totalInvoiceValue;
+      updated.invoiceAmount     = dto.invoiceAmount     ?? existing.invoiceAmount;
+      updated.invoiceTaxAmount  = dto.invoiceTaxAmount  ?? existing.invoiceTaxAmount;
+      updated.invoiceVersionNo  = dto.invoiceVersionNo  ?? existing.invoiceVersionNo;
+      updated.invoiceSentOn     = existing.invoiceSentOn;
+      updated.paymentReceivedOn = existing.paymentReceivedOn;
+      updated.paymentId         = existing.paymentId;
+
+      const created = await this.invoiceDbService.createInvoice(updated);
+      this.logger.info(`Invoice updated with UId: ${dto.invoiceUId} version: ${created.version}`);
+      return this.mapToInterface(created);
+    } catch (error: any) {
+      this.logger.error("Error updating invoice", error);
+      throw error.status ? error : { status: 500, message: "Failed to update invoice" };
+    }
+  }
+
+  async deleteInvoice(invoiceUId: string): Promise<{ message: string }> {
+    try {
+      const existing = await this.invoiceDbService.findInvoiceByUId(invoiceUId);
+      if (!existing) {
+        throw { status: 404, message: "Invoice not found" };
+      }
+      await this.invoiceDbService.archiveInvoice(existing.id!);
+      this.logger.info(`Invoice deleted with UId: ${invoiceUId}`);
+      return { message: "Invoice deleted successfully" };
+    } catch (error: any) {
+      this.logger.error("Error deleting invoice", error);
+      throw error.status ? error : { status: 500, message: "Failed to delete invoice" };
+    }
+  }
+
+  async generateInvoicePdf(invoiceUId: string): Promise<Buffer> {
+    try {
+      const invoice = await this.invoiceDbService.findInvoiceByUId(invoiceUId);
       if (!invoice) {
         throw { status: 404, message: "Invoice not found" };
       }
 
-      // Extract line items from the included association
-      const lineItems = (invoice as any).InvoiceLineItems as InvoiceLineItem[];
+      const invoiceWithLineItems = await this.invoiceDbService.findInvoiceByIdWithLineItems(invoice.id!);
+      const lineItems = (invoiceWithLineItems as any).InvoiceLineItems as InvoiceLineItem[];
 
-      // PDFKit works with streams so we wrap it in a Promise
       return new Promise((resolve, reject) => {
         const PDFDocument       = require("pdfkit");
         const doc               = new PDFDocument({ margin: 50 });
         const buffers: Buffer[] = [];
 
-        // Collect all PDF chunks into buffer array
         doc.on("data", (chunk: Buffer) => buffers.push(chunk));
-
-        // Merge all chunks and resolve when PDF is complete
         doc.on("end", () => resolve(Buffer.concat(buffers)));
-
-        // Reject promise if error occurs
         doc.on("error", reject);
 
-        // ─── HEADER ─────────────────────────────────────────────
         doc.fontSize(20).font("Helvetica-Bold").text("INVOICE", { align: "center" });
         doc.moveDown();
-
         doc.fontSize(10).font("Helvetica");
         doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown(0.5);
 
-        // ─── INVOICE DETAILS ────────────────────────────────────
         doc.font("Helvetica-Bold").text("Invoice Details", { underline: true });
         doc.moveDown(0.5);
-
         doc.font("Helvetica");
-        doc.text(`Invoice ID      : ${invoice.id}`);
+        doc.text(`Invoice UId     : ${invoice.invoiceUId}`);
         doc.text(`SOW ID          : ${invoice.sowId}`);
         doc.text(`Customer ID     : ${invoice.customerId}`);
         doc.text(`Status          : ${invoice.status}`);
@@ -326,11 +289,9 @@ class InvoiceService {
         doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown(0.5);
 
-        // ─── LINE ITEMS TABLE ────────────────────────────────────
         doc.font("Helvetica-Bold").text("Line Items", { underline: true });
         doc.moveDown(0.5);
 
-        // Table header row
         doc.font("Helvetica-Bold");
         doc.text("Order No",   50,  doc.y, { width: 100 });
         doc.text("Particular", 150, doc.y - doc.currentLineHeight(), { width: 200 });
@@ -338,14 +299,12 @@ class InvoiceService {
         doc.text("Unit",       420, doc.y - doc.currentLineHeight(), { width: 50 });
         doc.text("Total",      470, doc.y - doc.currentLineHeight(), { width: 80 });
         doc.moveDown(0.5);
-
         doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown(0.3);
 
         doc.font("Helvetica");
         let runningTotal = 0;
 
-        // Print each line item row — track y position manually for columns
         for (const item of lineItems) {
           const y = doc.y;
           doc.text(item.orderNo,    50,  y, { width: 100 });
@@ -357,24 +316,20 @@ class InvoiceService {
           runningTotal += item.total;
         }
 
-        // ─── GRAND TOTAL ─────────────────────────────────────────
         doc.moveDown(0.5);
         doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
         doc.moveDown(0.5);
-
         doc.font("Helvetica-Bold");
         doc.text(`Grand Total : $${runningTotal}`, { align: "right" });
 
-        // ─── FOOTER ──────────────────────────────────────────────
         doc.moveDown();
         doc.fontSize(8).font("Helvetica").fillColor("gray");
         doc.text("Generated by CentraAPIs Invoice Management System", { align: "center" });
 
-        // Signal PDFKit that we are done — triggers 'end' event
         doc.end();
       });
     } catch (error: any) {
-      this.logger.error(`Error generating PDF for invoiceId: ${invoiceId}`, error);
+      this.logger.error(`Error generating PDF for invoiceUId: ${invoiceUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to generate invoice PDF" };
     }
   }

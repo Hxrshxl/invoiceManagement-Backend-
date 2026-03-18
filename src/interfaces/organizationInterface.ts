@@ -1,5 +1,8 @@
 export interface IOrganization {
   id?: string;
+  organizationUId?: string;
+  version?: number;
+  archive?: boolean;
   gstNo: string;
   panNo: string;
   legalOrganizationName: string;

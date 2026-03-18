@@ -1,9 +1,10 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../postgresDB/pgConfig";
-import { ISow } from "../interfaces/sowInterface";
 import { BaseEntity } from "./baseEntity";
+import { ISow } from "../interfaces/sowInterface";
 
 class Sow extends BaseEntity implements ISow {
+  public sowUId!: string;
   public customerId!: string;
   public title!: string;
   public totalValue!: number;
@@ -18,6 +19,11 @@ class Sow extends BaseEntity implements ISow {
 Sow.init(
   {
     ...BaseEntity.baseFields,
+    sowUId: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+    },
     customerId: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -49,12 +55,10 @@ Sow.init(
     customerPONumber: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     customerSONumber: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     invoiceEmailAddresses: {
       type: DataTypes.ARRAY(DataTypes.STRING),

@@ -1,9 +1,10 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../postgresDB/pgConfig";
-import { IOrganization } from "../interfaces/organizationInterface";
 import { BaseEntity } from "./baseEntity";
+import { IOrganization } from "../interfaces/organizationInterface";
 
 class Organization extends BaseEntity implements IOrganization {
+  public organizationUId!: string;
   public gstNo!: string;
   public panNo!: string;
   public legalOrganizationName!: string;
@@ -19,6 +20,11 @@ class Organization extends BaseEntity implements IOrganization {
 Organization.init(
   {
     ...BaseEntity.baseFields,
+    organizationUId: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+    },
     gstNo: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -50,7 +56,6 @@ Organization.init(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     addressId: {
       type: DataTypes.STRING,
