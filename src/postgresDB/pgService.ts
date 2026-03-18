@@ -19,7 +19,7 @@ import {
 } from "./pgInterface";
 import { col, fn, where } from "sequelize";
 
-// ─── ORGANIZATION DB SERVICE ──────────────────────────────────────────────────
+//  ORGANIZATION DB SERVICE 
 
 @injectable()
 export class OrganizationDbService implements IOrganizationDbService {
@@ -43,7 +43,7 @@ export class OrganizationDbService implements IOrganizationDbService {
   }
 }
 
-// ─── CUSTOMER DB SERVICE ──────────────────────────────────────────────────────
+//  CUSTOMER DB SERVICE 
 
 @injectable()
 export class CustomerDbService implements ICustomerDbService {
@@ -73,7 +73,7 @@ export class CustomerDbService implements ICustomerDbService {
   }
 }
 
-// ─── SOW DB SERVICE ───────────────────────────────────────────────────────────
+// SOW DB SERVICE 
 
 @injectable()
 export class SowDbService implements ISowDbService {
@@ -103,7 +103,7 @@ export class SowDbService implements ISowDbService {
   }
 }
 
-// ─── SOW PAYMENT PLAN DB SERVICE ─────────────────────────────────────────────
+// SOW PAYMENT PLAN DB SERVICE 
 
 @injectable()
 export class SowPaymentPlanDbService implements ISowPaymentPlanDbService {
@@ -155,8 +155,6 @@ export class SowPaymentPlanDbService implements ISowPaymentPlanDbService {
   }
 
   async getTotalPlannedAmountBySowId(sowId: string): Promise<number> {
-    // Calculate sum of all payment plan amounts for a SOW
-    // Used to validate new plans don't exceed SOW total value
     const plans = await SowPaymentPlan.findAll({
       where: { sowId },
     });
@@ -164,7 +162,7 @@ export class SowPaymentPlanDbService implements ISowPaymentPlanDbService {
   }
 }
 
-// ─── SOW PAYMENT PLAN LINE ITEM DB SERVICE ───────────────────────────────────
+// SOW PAYMENT PLAN LINE ITEM DB SERVICE 
 
 @injectable()
 export class SowPaymentPlanLineItemDbService implements ISowPaymentPlanLineItemDbService {
@@ -184,7 +182,7 @@ export class SowPaymentPlanLineItemDbService implements ISowPaymentPlanLineItemD
   }
 }
 
-// ─── INVOICE DB SERVICE ───────────────────────────────────────────────────────
+// INVOICE DB SERVICE 
 
 @injectable()
 export class InvoiceDbService implements IInvoiceDbService {
@@ -247,7 +245,7 @@ export class InvoiceDbService implements IInvoiceDbService {
   }
 }
 
-// ─── INVOICE LINE ITEM DB SERVICE ────────────────────────────────────────────
+// INVOICE LINE ITEM DB SERVICE 
 
 @injectable()
 export class InvoiceLineItemDbService implements IInvoiceLineItemDbService {
@@ -263,7 +261,7 @@ export class InvoiceLineItemDbService implements IInvoiceLineItemDbService {
   }
 }
 
-// ─── PAYMENT DB SERVICE ───────────────────────────────────────────────────────
+// PAYMENT DB SERVICE 
 
 @injectable()
 export class PaymentDbService implements IPaymentDbService {
