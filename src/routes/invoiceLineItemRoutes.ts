@@ -1,15 +1,31 @@
-import { Router, Request, Response } from "express";
-import { container } from "../app";
+import { Router } from "express";
+import { injectable, inject } from "inversify";
+import { Request, Response } from "express";
 import TYPES from "../types/inversifyTypes";
 import InvoiceLineItemController from "../controllers/invoiceLineItemController";
 
-const invoiceLineItemRouter = Router();
+@injectable()
+export class InvoiceLineItemRoutes {
+  private readonly router: Router;
 
-invoiceLineItemRouter.post("/createInvoiceLineItem", (req: Request, res: Response) => {
-  container.get<InvoiceLineItemController>(TYPES.InvoiceLineItemController).createInvoiceLineItemHandler(req, res);
-});
-invoiceLineItemRouter.post("/getInvoiceLineItemsByInvoiceId", (req: Request, res: Response) => {
-  container.get<InvoiceLineItemController>(TYPES.InvoiceLineItemController).getInvoiceLineItemsByInvoiceIdHandler(req, res);
-});
+  constructor(
+    @inject(TYPES.InvoiceLineItemController)
+    private readonly controller: InvoiceLineItemController
+  ) {
+    this.router = Router();
+    this.registerRoutes();
+  }
 
-export default invoiceLineItemRouter;
+  private registerRoutes(): void {
+    this.router.post("/createInvoiceLineItem", (req: Request, res: Response) =>
+      this.controller.createInvoiceLineItemHandler(req, res)
+    );
+    this.router.post("/getInvoiceLineItemsByInvoiceId", (req: Request, res: Response) =>
+      this.controller.getInvoiceLineItemsByInvoiceIdHandler(req, res)
+    );
+  }
+
+  getRouter(): Router {
+    return this.router;
+  }
+}

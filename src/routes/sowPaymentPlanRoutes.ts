@@ -1,24 +1,40 @@
-import { Router, Request, Response } from "express";
-import { container } from "../app";
+import { Router } from "express";
+import { injectable, inject } from "inversify";
+import { Request, Response } from "express";
 import TYPES from "../types/inversifyTypes";
 import SowPaymentPlanController from "../controllers/sowPaymentPlanController";
 
-const sowPaymentPlanRouter = Router();
+@injectable()
+export class SowPaymentPlanRoutes {
+  private readonly router: Router;
 
-sowPaymentPlanRouter.post("/createSowPaymentPlan", (req: Request, res: Response) => {
-  container.get<SowPaymentPlanController>(TYPES.SowPaymentPlanController).createSowPaymentPlanHandler(req, res);
-});
-sowPaymentPlanRouter.post("/getAllSowPaymentPlans", (req: Request, res: Response) => {
-  container.get<SowPaymentPlanController>(TYPES.SowPaymentPlanController).getAllSowPaymentPlansHandler(req, res);
-});
-sowPaymentPlanRouter.post("/getSowPaymentPlanById", (req: Request, res: Response) => {
-  container.get<SowPaymentPlanController>(TYPES.SowPaymentPlanController).getSowPaymentPlanByIdHandler(req, res);
-});
-sowPaymentPlanRouter.post("/getSowPaymentPlansBySowId", (req: Request, res: Response) => {
-  container.get<SowPaymentPlanController>(TYPES.SowPaymentPlanController).getSowPaymentPlansBySowIdHandler(req, res);
-});
-sowPaymentPlanRouter.post("/getInvoiceSchedule", (req: Request, res: Response) => {
-  container.get<SowPaymentPlanController>(TYPES.SowPaymentPlanController).getInvoiceScheduleHandler(req, res);
-});
+  constructor(
+    @inject(TYPES.SowPaymentPlanController)
+    private readonly controller: SowPaymentPlanController
+  ) {
+    this.router = Router();
+    this.registerRoutes();
+  }
 
-export default sowPaymentPlanRouter;
+  private registerRoutes(): void {
+    this.router.post("/createSowPaymentPlan", (req: Request, res: Response) =>
+      this.controller.createSowPaymentPlanHandler(req, res)
+    );
+    this.router.post("/getAllSowPaymentPlans", (req: Request, res: Response) =>
+      this.controller.getAllSowPaymentPlansHandler(req, res)
+    );
+    this.router.post("/getSowPaymentPlanById", (req: Request, res: Response) =>
+      this.controller.getSowPaymentPlanByIdHandler(req, res)
+    );
+    this.router.post("/getSowPaymentPlansBySowId", (req: Request, res: Response) =>
+      this.controller.getSowPaymentPlansBySowIdHandler(req, res)
+    );
+    this.router.post("/getInvoiceSchedule", (req: Request, res: Response) =>
+      this.controller.getInvoiceScheduleHandler(req, res)
+    );
+  }
+
+  getRouter(): Router {
+    return this.router;
+  }
+}

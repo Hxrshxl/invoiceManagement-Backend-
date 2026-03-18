@@ -1,18 +1,34 @@
-import { Router, Request, Response } from "express";
-import { container } from "../app";
+import { Router } from "express";
+import { injectable, inject } from "inversify";
+import { Request, Response } from "express";
 import TYPES from "../types/inversifyTypes";
 import SowController from "../controllers/sowController";
 
-const sowRouter = Router();
+@injectable()
+export class SowRoutes {
+  private readonly router: Router;
 
-sowRouter.post("/createSow", (req: Request, res: Response) => {
-  container.get<SowController>(TYPES.SowController).createSowHandler(req, res);
-});
-sowRouter.post("/getAllSows", (req: Request, res: Response) => {
-  container.get<SowController>(TYPES.SowController).getAllSowsHandler(req, res);
-});
-sowRouter.post("/getSowById", (req: Request, res: Response) => {
-  container.get<SowController>(TYPES.SowController).getSowByIdHandler(req, res);
-});
+  constructor(
+    @inject(TYPES.SowController)
+    private readonly controller: SowController
+  ) {
+    this.router = Router();
+    this.registerRoutes();
+  }
 
-export default sowRouter;
+  private registerRoutes(): void {
+    this.router.post("/createSow", (req: Request, res: Response) =>
+      this.controller.createSowHandler(req, res)
+    );
+    this.router.post("/getAllSows", (req: Request, res: Response) =>
+      this.controller.getAllSowsHandler(req, res)
+    );
+    this.router.post("/getSowById", (req: Request, res: Response) =>
+      this.controller.getSowByIdHandler(req, res)
+    );
+  }
+
+  getRouter(): Router {
+    return this.router;
+  }
+}

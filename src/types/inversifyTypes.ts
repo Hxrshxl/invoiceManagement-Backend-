@@ -1,5 +1,4 @@
 const TYPES = {
-  // ─── LOGGER ───────────────────────────────────────────────────────────────
   Logger: Symbol.for("Logger"),
 
   // ─── DB SERVICES ──────────────────────────────────────────────────────────
@@ -31,6 +30,16 @@ const TYPES = {
   InvoiceController:                Symbol.for("InvoiceController"),
   InvoiceLineItemController:        Symbol.for("InvoiceLineItemController"),
   PaymentController:                Symbol.for("PaymentController"),
+
+  // ─── ROUTES ───────────────────────────────────────────────────────────────
+  OrganizationRoutes:               Symbol.for("OrganizationRoutes"),
+  CustomerRoutes:                   Symbol.for("CustomerRoutes"),
+  SowRoutes:                        Symbol.for("SowRoutes"),
+  SowPaymentPlanRoutes:             Symbol.for("SowPaymentPlanRoutes"),
+  SowPaymentPlanLineItemRoutes:     Symbol.for("SowPaymentPlanLineItemRoutes"),
+  InvoiceRoutes:                    Symbol.for("InvoiceRoutes"),
+  InvoiceLineItemRoutes:            Symbol.for("InvoiceLineItemRoutes"),
+  PaymentRoutes:                    Symbol.for("PaymentRoutes"),
 };
 
 export default TYPES;

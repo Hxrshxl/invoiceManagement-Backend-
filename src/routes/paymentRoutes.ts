@@ -1,15 +1,31 @@
-import { Router, Request, Response } from "express";
-import { container } from "../app";
+import { Router } from "express";
+import { injectable, inject } from "inversify";
+import { Request, Response } from "express";
 import TYPES from "../types/inversifyTypes";
 import PaymentController from "../controllers/paymentController";
 
-const paymentRouter = Router();
+@injectable()
+export class PaymentRoutes {
+  private readonly router: Router;
 
-paymentRouter.post("/createPayment", (req: Request, res: Response) => {
-  container.get<PaymentController>(TYPES.PaymentController).createPaymentHandler(req, res);
-});
-paymentRouter.post("/getPaymentByInvoiceId", (req: Request, res: Response) => {
-  container.get<PaymentController>(TYPES.PaymentController).getPaymentByInvoiceIdHandler(req, res);
-});
+  constructor(
+    @inject(TYPES.PaymentController)
+    private readonly controller: PaymentController
+  ) {
+    this.router = Router();
+    this.registerRoutes();
+  }
 
-export default paymentRouter;
+  private registerRoutes(): void {
+    this.router.post("/createPayment", (req: Request, res: Response) =>
+      this.controller.createPaymentHandler(req, res)
+    );
+    this.router.post("/getPaymentByInvoiceId", (req: Request, res: Response) =>
+      this.controller.getPaymentByInvoiceIdHandler(req, res)
+    );
+  }
+
+  getRouter(): Router {
+    return this.router;
+  }
+}

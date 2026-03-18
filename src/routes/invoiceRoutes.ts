@@ -1,24 +1,40 @@
-import { Router, Request, Response } from "express";
-import { container } from "../app";
+import { Router } from "express";
+import { injectable, inject } from "inversify";
+import { Request, Response } from "express";
 import TYPES from "../types/inversifyTypes";
 import InvoiceController from "../controllers/invoiceController";
 
-const invoiceRouter = Router();
+@injectable()
+export class InvoiceRoutes {
+  private readonly router: Router;
 
-invoiceRouter.post("/generateInvoicesForToday", (req: Request, res: Response) => {
-  container.get<InvoiceController>(TYPES.InvoiceController).generateInvoicesForTodayHandler(req, res);
-});
-invoiceRouter.post("/getAllInvoices", (req: Request, res: Response) => {
-  container.get<InvoiceController>(TYPES.InvoiceController).getAllInvoicesHandler(req, res);
-});
-invoiceRouter.post("/getInvoiceById", (req: Request, res: Response) => {
-  container.get<InvoiceController>(TYPES.InvoiceController).getInvoiceByIdHandler(req, res);
-});
-invoiceRouter.post("/approveInvoice", (req: Request, res: Response) => {
-  container.get<InvoiceController>(TYPES.InvoiceController).approveInvoiceHandler(req, res);
-});
-invoiceRouter.post("/cancelInvoice", (req: Request, res: Response) => {
-  container.get<InvoiceController>(TYPES.InvoiceController).cancelInvoiceHandler(req, res);
-});
+  constructor(
+    @inject(TYPES.InvoiceController)
+    private readonly controller: InvoiceController
+  ) {
+    this.router = Router();
+    this.registerRoutes();
+  }
 
-export default invoiceRouter;
+  private registerRoutes(): void {
+    this.router.post("/generateInvoicesForToday", (req: Request, res: Response) =>
+      this.controller.generateInvoicesForTodayHandler(req, res)
+    );
+    this.router.post("/getAllInvoices", (req: Request, res: Response) =>
+      this.controller.getAllInvoicesHandler(req, res)
+    );
+    this.router.post("/getInvoiceById", (req: Request, res: Response) =>
+      this.controller.getInvoiceByIdHandler(req, res)
+    );
+    this.router.post("/approveInvoice", (req: Request, res: Response) =>
+      this.controller.approveInvoiceHandler(req, res)
+    );
+    this.router.post("/cancelInvoice", (req: Request, res: Response) =>
+      this.controller.cancelInvoiceHandler(req, res)
+    );
+  }
+
+  getRouter(): Router {
+    return this.router;
+  }
+}

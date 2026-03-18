@@ -9,15 +9,15 @@ import TYPES from "./types/inversifyTypes";
 // ─── Models ───────────────────────────────────────────────────────────────────
 import "./models/index";
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
-import organizationRouter from "./routes/organizationRoutes";
-import customerRouter from "./routes/customerRoutes";
-import sowRouter from "./routes/sowRoutes";
-import sowPaymentPlanRouter from "./routes/sowPaymentPlanRoutes";
-import sowPaymentPlanLineItemRouter from "./routes/sowPaymentPlanLineItemRoutes";
-import invoiceRouter from "./routes/invoiceRoutes";
-import invoiceLineItemRouter from "./routes/invoiceLineItemRoutes";
-import paymentRouter from "./routes/paymentRoutes";
+// ─── Route Classes ────────────────────────────────────────────────────────────
+import { OrganizationRoutes } from "./routes/organizationRoutes";
+import { CustomerRoutes } from "./routes/customerRoutes";
+import { SowRoutes } from "./routes/sowRoutes";
+import { SowPaymentPlanRoutes } from "./routes/sowPaymentPlanRoutes";
+import { SowPaymentPlanLineItemRoutes } from "./routes/sowPaymentPlanLineItemRoutes";
+import { InvoiceRoutes } from "./routes/invoiceRoutes";
+import { InvoiceLineItemRoutes } from "./routes/invoiceLineItemRoutes";
+import { PaymentRoutes } from "./routes/paymentRoutes";
 
 // ─── DB Services ──────────────────────────────────────────────────────────────
 import {
@@ -102,8 +102,15 @@ container.bind(TYPES.InvoiceController).to(InvoiceController);
 container.bind(TYPES.InvoiceLineItemController).to(InvoiceLineItemController);
 container.bind(TYPES.PaymentController).to(PaymentController);
 
-// ─── 7. Export Container ──────────────────────────────────────────────────────
-export { container };
+// ─── 7. Bind Routes ───────────────────────────────────────────────────────────
+container.bind(TYPES.OrganizationRoutes).to(OrganizationRoutes);
+container.bind(TYPES.CustomerRoutes).to(CustomerRoutes);
+container.bind(TYPES.SowRoutes).to(SowRoutes);
+container.bind(TYPES.SowPaymentPlanRoutes).to(SowPaymentPlanRoutes);
+container.bind(TYPES.SowPaymentPlanLineItemRoutes).to(SowPaymentPlanLineItemRoutes);
+container.bind(TYPES.InvoiceRoutes).to(InvoiceRoutes);
+container.bind(TYPES.InvoiceLineItemRoutes).to(InvoiceLineItemRoutes);
+container.bind(TYPES.PaymentRoutes).to(PaymentRoutes);
 
 // ─── 8. Middlewares ───────────────────────────────────────────────────────────
 app.use(express.json());
@@ -114,15 +121,17 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   next();
 });
 
-app.use("/api/organizations",           organizationRouter);
-app.use("/api/customers",               customerRouter);
-app.use("/api/sows",                    sowRouter);
-app.use("/api/sowPaymentPlans",         sowPaymentPlanRouter);
-app.use("/api/sowPaymentPlanLineItems", sowPaymentPlanLineItemRouter);
-app.use("/api/invoices",                invoiceRouter);
-app.use("/api/invoiceLineItems",        invoiceLineItemRouter);
-app.use("/api/payments",               paymentRouter);
+// ─── 9. Register Routes ───────────────────────────────────────────────────────
+app.use("/api/organizations",           container.get<OrganizationRoutes>(TYPES.OrganizationRoutes).getRouter());
+app.use("/api/customers",               container.get<CustomerRoutes>(TYPES.CustomerRoutes).getRouter());
+app.use("/api/sows",                    container.get<SowRoutes>(TYPES.SowRoutes).getRouter());
+app.use("/api/sowPaymentPlans",         container.get<SowPaymentPlanRoutes>(TYPES.SowPaymentPlanRoutes).getRouter());
+app.use("/api/sowPaymentPlanLineItems", container.get<SowPaymentPlanLineItemRoutes>(TYPES.SowPaymentPlanLineItemRoutes).getRouter());
+app.use("/api/invoices",                container.get<InvoiceRoutes>(TYPES.InvoiceRoutes).getRouter());
+app.use("/api/invoiceLineItems",        container.get<InvoiceLineItemRoutes>(TYPES.InvoiceLineItemRoutes).getRouter());
+app.use("/api/payments",                container.get<PaymentRoutes>(TYPES.PaymentRoutes).getRouter());
 
+// ─── 10. Start Server ─────────────────────────────────────────────────────────
 const startServer = async (): Promise<void> => {
   try {
     await sequelize.authenticate();
