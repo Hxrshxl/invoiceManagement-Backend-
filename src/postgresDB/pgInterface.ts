@@ -7,7 +7,7 @@ import Invoice from "../models/invoiceModel";
 import InvoiceLineItem from "../models/invoiceLineItemModel";
 import Payment from "../models/paymentModel";
 
-// ─── ORGANIZATION ─────────────────────────────────────────────────────────────
+// ORGANIZATION 
 export interface IOrganizationDbService {
   createOrganization(organization: Organization): Promise<Organization>;
   findAllOrganizations(): Promise<Organization[]>;
@@ -17,7 +17,7 @@ export interface IOrganizationDbService {
   archiveOrganization(id: string): Promise<Organization>;
 }
 
-// ─── CUSTOMER ─────────────────────────────────────────────────────────────────
+// CUSTOMER 
 export interface ICustomerDbService {
   createCustomer(customer: Customer): Promise<Customer>;
   findAllCustomers(): Promise<Customer[]>;
@@ -28,7 +28,7 @@ export interface ICustomerDbService {
   archiveCustomer(id: string): Promise<Customer>;
 }
 
-// ─── SOW ──────────────────────────────────────────────────────────────────────
+// SOW 
 export interface ISowDbService {
   createSow(sow: Sow): Promise<Sow>;
   findAllSows(): Promise<Sow[]>;
@@ -39,7 +39,7 @@ export interface ISowDbService {
   archiveSow(id: string): Promise<Sow>;
 }
 
-// ─── SOW PAYMENT PLAN ─────────────────────────────────────────────────────────
+//  SOW PAYMENT PLAN 
 export interface ISowPaymentPlanDbService {
   createSowPaymentPlan(plan: SowPaymentPlan): Promise<SowPaymentPlan>;
   findAllSowPaymentPlans(): Promise<SowPaymentPlan[]>;
@@ -52,7 +52,7 @@ export interface ISowPaymentPlanDbService {
   archiveSowPaymentPlan(id: string): Promise<SowPaymentPlan>;
 }
 
-// ─── SOW PAYMENT PLAN LINE ITEM ───────────────────────────────────────────────
+//  SOW PAYMENT PLAN LINE ITEM 
 export interface ISowPaymentPlanLineItemDbService {
   createSowPaymentPlanLineItem(lineItem: SowPaymentPlanLineItem): Promise<SowPaymentPlanLineItem>;
   findAllSowPaymentPlanLineItems(): Promise<SowPaymentPlanLineItem[]>;
@@ -61,7 +61,7 @@ export interface ISowPaymentPlanLineItemDbService {
   archiveSowPaymentPlanLineItem(id: string): Promise<SowPaymentPlanLineItem>;
 }
 
-// ─── INVOICE ──────────────────────────────────────────────────────────────────
+//  INVOICE 
 export interface IInvoiceDbService {
   createInvoice(invoice: Invoice): Promise<Invoice>;
   findAllInvoices(): Promise<Invoice[]>;
@@ -74,7 +74,7 @@ export interface IInvoiceDbService {
   archiveInvoice(id: string): Promise<Invoice>;
 }
 
-// ─── INVOICE LINE ITEM ────────────────────────────────────────────────────────
+//  INVOICE LINE ITEM 
 export interface IInvoiceLineItemDbService {
   createInvoiceLineItem(lineItem: InvoiceLineItem): Promise<InvoiceLineItem>;
   findInvoiceLineItemByUId(invoiceLineItemUId: string): Promise<InvoiceLineItem | null>;
@@ -82,7 +82,7 @@ export interface IInvoiceLineItemDbService {
   archiveInvoiceLineItem(id: string): Promise<InvoiceLineItem>;
 }
 
-// ─── PAYMENT ──────────────────────────────────────────────────────────────────
+//  PAYMENT 
 export interface IPaymentDbService {
   createPayment(payment: Payment): Promise<Payment>;
   findPaymentByUId(paymentUId: string): Promise<Payment | null>;

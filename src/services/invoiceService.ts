@@ -4,6 +4,8 @@ import TYPES from "../types/inversifyTypes";
 import Invoice from "../models/invoiceModel";
 import InvoiceLineItem from "../models/invoiceLineItemModel";
 import Payment from "../models/paymentModel";
+import Customer from "../models/customerModel";
+import Organization from "../models/organizationModel";
 import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
 import { IInvoice } from "../interfaces/invoiceInterface";
 import { UpdateInvoiceDto } from "../dto/updateInvoiceDto";
@@ -28,51 +30,6 @@ class InvoiceService {
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
-
-  private mapToInterface(invoice: Invoice): IInvoice {
-    const lineItems      = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
-    const payment        = (invoice as any).Payment as Payment | null;
-    const customer       = (invoice as any).Customer as any | null;
-    const organization   = customer?.Organization ?? null;
-
-    return {
-      id:                invoice.id,
-      invoiceUId:        invoice.invoiceUId,
-      version:           invoice.version,
-      archive:           invoice.archive,
-      sowId:             invoice.sowId,
-      sowPaymentPlanId:  invoice.sowPaymentPlanId,
-      customerId:        invoice.customerId,
-      status:            invoice.status,
-      totalInvoiceValue: invoice.totalInvoiceValue,
-      invoiceAmount:     invoice.invoiceAmount,
-      invoiceTaxAmount:  invoice.invoiceTaxAmount,
-      invoiceSentOn:     invoice.invoiceSentOn,
-      paymentReceivedOn: invoice.paymentReceivedOn,
-      invoiceVersionNo:  invoice.invoiceVersionNo,
-      paymentId:         invoice.paymentId,
-      createdAt:         invoice.createdAt,
-      updatedAt:         invoice.updatedAt,
-
-      organizationName:  organization?.legalOrganizationName ?? null,
-      customerName:      customer?.legalName                 ?? null,
-
-      InvoiceLineItems: lineItems.map((l) => ({
-        orderNo:    l.orderNo,
-        particular: l.particular,
-        rate:       l.rate,
-        unit:       l.unit,
-        total:      l.total,
-      })),
-
-      Payment: payment ? {
-        paymentDate:   payment.paymentDate,
-        isFullPayment: payment.isFullPayment,
-        bankPayment:   payment.bankPayment,
-      } : null,
-
-    } as any;
-  }
 
   async generateInvoicesForToday(date?: string): Promise<{ invoices: IInvoice[], skipped: number }> {
     try {
@@ -109,17 +66,17 @@ class InvoiceService {
           continue;
         }
 
-        const invoice = new Invoice();
-        invoice.sowId             = plan.sowId;
-        invoice.customerId        = plan.customerId;
-        invoice.sowPaymentPlanId  = plan.id!;
-        invoice.status            = "Drafted";
-        invoice.totalInvoiceValue = plan.totalActualAmount;
-        invoice.invoiceAmount     = plan.totalActualAmount;
-        invoice.invoiceTaxAmount  = 0;
-        invoice.invoiceVersionNo  = 1;
-        invoice.version           = 1;
-        invoice.archive           = false;
+        const invoice               = new Invoice();
+        invoice.sowId               = plan.sowId;
+        invoice.customerId          = plan.customerId;
+        invoice.sowPaymentPlanId    = plan.id!;
+        invoice.status              = "Drafted";
+        invoice.totalInvoiceValue   = plan.totalActualAmount;
+        invoice.invoiceAmount       = plan.totalActualAmount;
+        invoice.invoiceTaxAmount    = 0;
+        invoice.invoiceVersionNo    = 1;
+        invoice.version             = 1;
+        invoice.archive             = false;
 
         const createdInvoice = await this.invoiceDbService.createInvoice(invoice);
         this.logger.info(`Invoice created with id: ${createdInvoice.id} for plan: ${plan.id}`);
@@ -127,20 +84,29 @@ class InvoiceService {
         const lineItems = (plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[];
 
         for (const lineItem of lineItems) {
-          const invoiceLineItem = new InvoiceLineItem();
-          invoiceLineItem.invoiceId  = createdInvoice.id!;
-          invoiceLineItem.orderNo    = lineItem.orderId;
-          invoiceLineItem.particular = lineItem.particular;
-          invoiceLineItem.rate       = lineItem.rate;
-          invoiceLineItem.unit       = lineItem.unit;
-          invoiceLineItem.total      = lineItem.total;
-          invoiceLineItem.version    = 1;
-          invoiceLineItem.archive    = false;
+          const invoiceLineItem            = new InvoiceLineItem();
+          invoiceLineItem.invoiceId        = createdInvoice.id!;
+          invoiceLineItem.orderNo          = lineItem.orderId;
+          invoiceLineItem.particular       = lineItem.particular;
+          invoiceLineItem.rate             = lineItem.rate;
+          invoiceLineItem.unit             = lineItem.unit;
+          invoiceLineItem.total            = lineItem.total;
+          invoiceLineItem.version          = 1;
+          invoiceLineItem.archive          = false;
 
           await this.invoiceLineItemDbService.createInvoiceLineItem(invoiceLineItem);
         }
 
-        invoices.push(this.mapToInterface(createdInvoice));
+        invoices.push({
+          id:                createdInvoice.id,
+          invoiceUId:        createdInvoice.invoiceUId,
+          status:            createdInvoice.status,
+          totalInvoiceValue: createdInvoice.totalInvoiceValue,
+          invoiceAmount:     createdInvoice.invoiceAmount,
+          paymentReceivedOn: createdInvoice.paymentReceivedOn,
+          InvoiceLineItems:  [],
+          Payment:           null,
+        } as any);
       }
 
       this.logger.info(`Generated ${invoices.length} invoices, skipped ${skipped}`);
@@ -155,7 +121,36 @@ class InvoiceService {
     try {
       const invoices = await this.invoiceDbService.findAllInvoices();
       this.logger.info(`Fetched ${invoices.length} invoices`);
-      return invoices.map((i) => this.mapToInterface(i));
+
+      return invoices.map((invoice) => {
+        const lineItems    = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+        const payment      = (invoice as any).Payment as Payment | null;
+        const customer     = (invoice as any).Customer as Customer | null;
+        const organization = customer ? (customer as any).Organization as Organization | null : null;
+
+        return {
+          id:                invoice.id,
+          invoiceUId:        invoice.invoiceUId,
+          status:            invoice.status,
+          totalInvoiceValue: invoice.totalInvoiceValue,
+          invoiceAmount:     invoice.invoiceAmount,
+          paymentReceivedOn: invoice.paymentReceivedOn,
+          organizationName:  organization?.legalOrganizationName ?? null,
+          customerName:      customer?.legalName                 ?? null,
+          InvoiceLineItems: lineItems.map((li) => ({
+            orderNo:    li.orderNo,
+            particular: li.particular,
+            rate:       li.rate,
+            unit:       li.unit,
+            total:      li.total,
+          })),
+          Payment: payment ? {
+            paymentDate:   payment.paymentDate,
+            isFullPayment: payment.isFullPayment,
+            bankPayment:   payment.bankPayment,
+          } : null,
+        } as any;
+      });
     } catch (error: any) {
       this.logger.error("Error fetching invoices", error);
       throw error.status ? error : { status: 500, message: "Failed to fetch invoices" };
@@ -169,7 +164,34 @@ class InvoiceService {
         throw { status: 404, message: "Invoice not found" };
       }
       this.logger.info(`Fetched invoice with UId: ${invoiceUId}`);
-      return this.mapToInterface(invoice);
+
+      const lineItems    = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+      const payment      = (invoice as any).Payment as Payment | null;
+      const customer     = (invoice as any).Customer as Customer | null;
+      const organization = customer ? (customer as any).Organization as Organization | null : null;
+
+      return {
+        id:                invoice.id,
+        invoiceUId:        invoice.invoiceUId,
+        status:            invoice.status,
+        totalInvoiceValue: invoice.totalInvoiceValue,
+        invoiceAmount:     invoice.invoiceAmount,
+        paymentReceivedOn: invoice.paymentReceivedOn,
+        organizationName:  organization?.legalOrganizationName ?? null,
+        customerName:      customer?.legalName                 ?? null,
+        InvoiceLineItems: lineItems.map((li) => ({
+          orderNo:    li.orderNo,
+          particular: li.particular,
+          rate:       li.rate,
+          unit:       li.unit,
+          total:      li.total,
+        })),
+        Payment: payment ? {
+          paymentDate:   payment.paymentDate,
+          isFullPayment: payment.isFullPayment,
+          bankPayment:   payment.bankPayment,
+        } : null,
+      } as any;
     } catch (error: any) {
       this.logger.error(`Error fetching invoice with UId: ${invoiceUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch invoice" };
@@ -191,7 +213,17 @@ class InvoiceService {
 
       const updated = await this.invoiceDbService.updateInvoiceStatus(invoice.id!, "Approved");
       this.logger.info(`Invoice approved with UId: ${invoiceUId}`);
-      return this.mapToInterface(updated);
+
+      return {
+        id:                updated.id,
+        invoiceUId:        updated.invoiceUId,
+        status:            updated.status,
+        totalInvoiceValue: updated.totalInvoiceValue,
+        invoiceAmount:     updated.invoiceAmount,
+        paymentReceivedOn: updated.paymentReceivedOn,
+        InvoiceLineItems:  [],
+        Payment:           null,
+      } as any;
     } catch (error: any) {
       this.logger.error(`Error approving invoice with UId: ${invoiceUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to approve invoice" };
@@ -213,61 +245,81 @@ class InvoiceService {
 
       const updated = await this.invoiceDbService.updateInvoiceStatus(invoice.id!, "Cancelled");
       this.logger.info(`Invoice cancelled with UId: ${invoiceUId}`);
-      return this.mapToInterface(updated);
+
+      return {
+        id:                updated.id,
+        invoiceUId:        updated.invoiceUId,
+        status:            updated.status,
+        totalInvoiceValue: updated.totalInvoiceValue,
+        invoiceAmount:     updated.invoiceAmount,
+        paymentReceivedOn: updated.paymentReceivedOn,
+        InvoiceLineItems:  [],
+        Payment:           null,
+      } as any;
     } catch (error: any) {
       this.logger.error(`Error cancelling invoice with UId: ${invoiceUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to cancel invoice" };
     }
   }
 
-  async updateInvoice(dto: UpdateInvoiceDto): Promise<IInvoice> {
-    try {
-      const existing = await this.invoiceDbService.findInvoiceByUId(dto.invoiceUId);
-      if (!existing) {
-        throw { status: 404, message: "Invoice not found" };
-      }
+  // async updateInvoice(dto: UpdateInvoiceDto): Promise<IInvoice> {
+  //   try {
+  //     const existing = await this.invoiceDbService.findInvoiceByUId(dto.invoiceUId);
+  //     if (!existing) {
+  //       throw { status: 404, message: "Invoice not found" };
+  //     }
 
-      await this.invoiceDbService.archiveInvoice(existing.id!);
+  //     await this.invoiceDbService.archiveInvoice(existing.id!);
 
-      const updated = new Invoice();
-      updated.invoiceUId        = existing.invoiceUId;
-      updated.version           = existing.version + 1;
-      updated.archive           = false;
-      updated.sowId             = existing.sowId;
-      updated.sowPaymentPlanId  = existing.sowPaymentPlanId;
-      updated.customerId        = existing.customerId;
-      updated.status            = dto.status            ?? existing.status;
-      updated.totalInvoiceValue = dto.totalInvoiceValue ?? existing.totalInvoiceValue;
-      updated.invoiceAmount     = dto.invoiceAmount     ?? existing.invoiceAmount;
-      updated.invoiceTaxAmount  = dto.invoiceTaxAmount  ?? existing.invoiceTaxAmount;
-      updated.invoiceVersionNo  = dto.invoiceVersionNo  ?? existing.invoiceVersionNo;
-      updated.invoiceSentOn     = existing.invoiceSentOn;
-      updated.paymentReceivedOn = existing.paymentReceivedOn;
-      updated.paymentId         = existing.paymentId;
+  //     const updated               = new Invoice();
+  //     updated.invoiceUId          = existing.invoiceUId;
+  //     updated.version             = existing.version + 1;
+  //     updated.archive             = false;
+  //     updated.sowId               = existing.sowId;
+  //     updated.sowPaymentPlanId    = existing.sowPaymentPlanId;
+  //     updated.customerId          = existing.customerId;
+  //     updated.status              = dto.status            ?? existing.status;
+  //     updated.totalInvoiceValue   = dto.totalInvoiceValue ?? existing.totalInvoiceValue;
+  //     updated.invoiceAmount       = dto.invoiceAmount     ?? existing.invoiceAmount;
+  //     updated.invoiceTaxAmount    = dto.invoiceTaxAmount  ?? existing.invoiceTaxAmount;
+  //     updated.invoiceVersionNo    = dto.invoiceVersionNo  ?? existing.invoiceVersionNo;
+  //     updated.invoiceSentOn       = existing.invoiceSentOn;
+  //     updated.paymentReceivedOn   = existing.paymentReceivedOn;
+  //     updated.paymentId           = existing.paymentId;
 
-      const created = await this.invoiceDbService.createInvoice(updated);
-      this.logger.info(`Invoice updated with UId: ${dto.invoiceUId} version: ${created.version}`);
-      return this.mapToInterface(created);
-    } catch (error: any) {
-      this.logger.error("Error updating invoice", error);
-      throw error.status ? error : { status: 500, message: "Failed to update invoice" };
-    }
-  }
+  //     const created = await this.invoiceDbService.createInvoice(updated);
+  //     this.logger.info(`Invoice updated with UId: ${dto.invoiceUId} version: ${created.version}`);
 
-  async deleteInvoice(invoiceUId: string): Promise<{ message: string }> {
-    try {
-      const existing = await this.invoiceDbService.findInvoiceByUId(invoiceUId);
-      if (!existing) {
-        throw { status: 404, message: "Invoice not found" };
-      }
-      await this.invoiceDbService.archiveInvoice(existing.id!);
-      this.logger.info(`Invoice deleted with UId: ${invoiceUId}`);
-      return { message: "Invoice deleted successfully" };
-    } catch (error: any) {
-      this.logger.error("Error deleting invoice", error);
-      throw error.status ? error : { status: 500, message: "Failed to delete invoice" };
-    }
-  }
+  //     return {
+  //       id:                created.id,
+  //       invoiceUId:        created.invoiceUId,
+  //       status:            created.status,
+  //       totalInvoiceValue: created.totalInvoiceValue,
+  //       invoiceAmount:     created.invoiceAmount,
+  //       paymentReceivedOn: created.paymentReceivedOn,
+  //       InvoiceLineItems:  [],
+  //       Payment:           null,
+  //     } as any;
+  //   } catch (error: any) {
+  //     this.logger.error("Error updating invoice", error);
+  //     throw error.status ? error : { status: 500, message: "Failed to update invoice" };
+  //   }
+  // }
+
+  // async deleteInvoice(invoiceUId: string): Promise<{ message: string }> {
+  //   try {
+  //     const existing = await this.invoiceDbService.findInvoiceByUId(invoiceUId);
+  //     if (!existing) {
+  //       throw { status: 404, message: "Invoice not found" };
+  //     }
+  //     await this.invoiceDbService.archiveInvoice(existing.id!);
+  //     this.logger.info(`Invoice deleted with UId: ${invoiceUId}`);
+  //     return { message: "Invoice deleted successfully" };
+  //   } catch (error: any) {
+  //     this.logger.error("Error deleting invoice", error);
+  //     throw error.status ? error : { status: 500, message: "Failed to delete invoice" };
+  //   }
+  // }
 
   async generateInvoicePdf(invoiceUId: string): Promise<Buffer> {
     try {
@@ -276,9 +328,9 @@ class InvoiceService {
         throw { status: 404, message: "Invoice not found" };
       }
 
-      const lineItems      = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
-      const customer       = (invoice as any).Customer as any | null;
-      const organization   = customer?.Organization ?? null;
+      const lineItems    = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+      const customer     = (invoice as any).Customer as Customer | null;
+      const organization = customer ? (customer as any).Organization as Organization | null : null;
 
       return new Promise((resolve, reject) => {
         const PDFDocument       = require("pdfkit");
@@ -298,15 +350,15 @@ class InvoiceService {
         doc.font("Helvetica-Bold").text("Invoice Details", { underline: true });
         doc.moveDown(0.5);
         doc.font("Helvetica");
-        doc.text(`Invoice UId       : ${invoice.invoiceUId}`);
-        doc.text(`Organization      : ${organization?.legalOrganizationName ?? "N/A"}`);
-        doc.text(`Customer          : ${customer?.legalName ?? "N/A"}`);
-        doc.text(`Status            : ${invoice.status}`);
-        doc.text(`Invoice Amount    : $${invoice.invoiceAmount}`);
-        doc.text(`Tax Amount        : $${invoice.invoiceTaxAmount}`);
-        doc.text(`Total Value       : $${invoice.totalInvoiceValue}`);
-        doc.text(`Payment Received  : ${invoice.paymentReceivedOn ?? "N/A"}`);
-        doc.text(`Created At        : ${invoice.createdAt}`);
+        doc.text(`Invoice UId      : ${invoice.invoiceUId}`);
+        doc.text(`Organization     : ${organization?.legalOrganizationName ?? "N/A"}`);
+        doc.text(`Customer         : ${customer?.legalName ?? "N/A"}`);
+        doc.text(`Status           : ${invoice.status}`);
+        doc.text(`Invoice Amount   : $${invoice.invoiceAmount}`);
+        doc.text(`Tax Amount       : $${invoice.invoiceTaxAmount}`);
+        doc.text(`Total Value      : $${invoice.totalInvoiceValue}`);
+        doc.text(`Payment Received : ${invoice.paymentReceivedOn ?? "N/A"}`);
+        doc.text(`Created At       : ${invoice.createdAt}`);
 
         doc.moveDown();
         doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();

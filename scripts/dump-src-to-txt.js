@@ -3,7 +3,7 @@ const path = require("path");
 
 const projectRoot = path.resolve(__dirname, "..");
 const srcRoot = path.join(projectRoot, "src");
-const outputPath = path.join(projectRoot, "src_code_dump.txt");
+const outputPath = path.join(projectRoot, "codes.txt");
 
 const SKIP_DIR_NAMES = new Set([
   "node_modules",

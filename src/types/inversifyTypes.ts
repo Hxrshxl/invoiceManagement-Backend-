@@ -1,7 +1,7 @@
 const TYPES = {
   Logger: Symbol.for("Logger"),
 
-  // ─── DB SERVICES ──────────────────────────────────────────────────────────
+  // DB SERVICES
   OrganizationDbService:            Symbol.for("OrganizationDbService"),
   CustomerDbService:                Symbol.for("CustomerDbService"),
   SowDbService:                     Symbol.for("SowDbService"),
@@ -11,7 +11,7 @@ const TYPES = {
   InvoiceLineItemDbService:         Symbol.for("InvoiceLineItemDbService"),
   PaymentDbService:                 Symbol.for("PaymentDbService"),
 
-  // ─── SERVICES ─────────────────────────────────────────────────────────────
+  // SERVICES 
   OrganizationService:              Symbol.for("OrganizationService"),
   CustomerService:                  Symbol.for("CustomerService"),
   SowService:                       Symbol.for("SowService"),
@@ -21,7 +21,7 @@ const TYPES = {
   InvoiceLineItemService:           Symbol.for("InvoiceLineItemService"),
   PaymentService:                   Symbol.for("PaymentService"),
 
-  // ─── CONTROLLERS ──────────────────────────────────────────────────────────
+  //  CONTROLLERS 
   OrganizationController:           Symbol.for("OrganizationController"),
   CustomerController:               Symbol.for("CustomerController"),
   SowController:                    Symbol.for("SowController"),
@@ -31,7 +31,7 @@ const TYPES = {
   InvoiceLineItemController:        Symbol.for("InvoiceLineItemController"),
   PaymentController:                Symbol.for("PaymentController"),
 
-  // ─── ROUTES ───────────────────────────────────────────────────────────────
+  // ROUTES
   OrganizationRoutes:               Symbol.for("OrganizationRoutes"),
   CustomerRoutes:                   Symbol.for("CustomerRoutes"),
   SowRoutes:                        Symbol.for("SowRoutes"),

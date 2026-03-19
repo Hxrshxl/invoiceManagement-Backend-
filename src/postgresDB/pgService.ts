@@ -699,7 +699,7 @@ export class InvoiceDbService implements IInvoiceDbService {
   }
 }
 
-// ─── INVOICE LINE ITEM DB SERVICE ────────────────────────────────────────────
+// INVOICE LINE ITEM DB SERVICE 
 
 @injectable()
 export class InvoiceLineItemDbService implements IInvoiceLineItemDbService {
@@ -730,7 +730,7 @@ export class InvoiceLineItemDbService implements IInvoiceLineItemDbService {
   }
 }
 
-// ─── PAYMENT DB SERVICE ───────────────────────────────────────────────────────
+//  PAYMENT DB SERVICE 
 
 @injectable()
 export class PaymentDbService implements IPaymentDbService {

@@ -20,23 +20,6 @@ class InvoiceLineItemService {
     private readonly logger: Logger
   ) {}
 
-  private mapToInterface(lineItem: InvoiceLineItem): IInvoiceLineItem {
-    return {
-      id:                 lineItem.id,
-      invoiceLineItemUId: lineItem.invoiceLineItemUId,
-      version:            lineItem.version,
-      archive:            lineItem.archive,
-      invoiceId:          lineItem.invoiceId,
-      orderNo:            lineItem.orderNo,
-      particular:         lineItem.particular,
-      rate:               lineItem.rate,
-      unit:               lineItem.unit,
-      total:              lineItem.total,
-      createdAt:          lineItem.createdAt,
-      updatedAt:          lineItem.updatedAt,
-    };
-  }
-
   async createInvoiceLineItem(dto: CreateInvoiceLineItemDto): Promise<IInvoiceLineItem> {
     try {
       const existingInvoice = await this.invoiceDbService.findInvoiceById(dto.invoiceId);
@@ -44,19 +27,29 @@ class InvoiceLineItemService {
         throw { status: 404, message: "Invoice not found" };
       }
 
-      const invoiceLineItem = new InvoiceLineItem();
-      invoiceLineItem.invoiceId  = dto.invoiceId;
-      invoiceLineItem.orderNo    = dto.orderNo;
-      invoiceLineItem.particular = dto.particular;
-      invoiceLineItem.rate       = dto.rate;
-      invoiceLineItem.unit       = dto.unit;
-      invoiceLineItem.total      = dto.total;
-      invoiceLineItem.version    = 1;
-      invoiceLineItem.archive    = false;
+      const invoiceLineItem            = new InvoiceLineItem();
+      invoiceLineItem.invoiceId        = dto.invoiceId;
+      invoiceLineItem.orderNo          = dto.orderNo;
+      invoiceLineItem.particular       = dto.particular;
+      invoiceLineItem.rate             = dto.rate;
+      invoiceLineItem.unit             = dto.unit;
+      invoiceLineItem.total            = dto.total;
+      invoiceLineItem.version          = 1;
+      invoiceLineItem.archive          = false;
 
       const created = await this.invoiceLineItemDbService.createInvoiceLineItem(invoiceLineItem);
       this.logger.info(`Invoice Line Item created with id: ${created.id}`);
-      return this.mapToInterface(created);
+
+      return {
+        id:                 created.id,
+        invoiceLineItemUId: created.invoiceLineItemUId,
+        invoiceId:          created.invoiceId,
+        orderNo:            created.orderNo,
+        particular:         created.particular,
+        rate:               created.rate,
+        unit:               created.unit,
+        total:              created.total,
+      } as any;
     } catch (error: any) {
       this.logger.error("Error creating invoice line item", error);
       throw error.status ? error : { status: 500, message: "Failed to create invoice line item" };
@@ -76,7 +69,17 @@ class InvoiceLineItemService {
       }
 
       this.logger.info(`Fetched ${lineItems.length} line items for invoiceId: ${invoiceId}`);
-      return lineItems.map((l) => this.mapToInterface(l));
+
+      return lineItems.map((lineItem) => ({
+        id:                 lineItem.id,
+        invoiceLineItemUId: lineItem.invoiceLineItemUId,
+        invoiceId:          lineItem.invoiceId,
+        orderNo:            lineItem.orderNo,
+        particular:         lineItem.particular,
+        rate:               lineItem.rate,
+        unit:               lineItem.unit,
+        total:              lineItem.total,
+      } as any));
     } catch (error: any) {
       this.logger.error(`Error fetching line items for invoiceId: ${invoiceId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch invoice line items" };
@@ -90,24 +93,32 @@ class InvoiceLineItemService {
   //       throw { status: 404, message: "Invoice Line Item not found" };
   //     }
 
-  //     // Archive old version
   //     await this.invoiceLineItemDbService.archiveInvoiceLineItem(existing.id!);
 
-  //     // Create new version with updated fields
-  //     const updated = new InvoiceLineItem();
-  //     updated.invoiceLineItemUId = existing.invoiceLineItemUId;
-  //     updated.version            = existing.version + 1;
-  //     updated.archive            = false;
-  //     updated.invoiceId          = existing.invoiceId;
-  //     updated.orderNo            = dto.orderNo    ?? existing.orderNo;
-  //     updated.particular         = dto.particular ?? existing.particular;
-  //     updated.rate               = dto.rate       ?? existing.rate;
-  //     updated.unit               = dto.unit       ?? existing.unit;
-  //     updated.total              = dto.total      ?? existing.total;
+  //     const updated                    = new InvoiceLineItem();
+  //     updated.invoiceLineItemUId       = existing.invoiceLineItemUId;
+  //     updated.version                  = existing.version + 1;
+  //     updated.archive                  = false;
+  //     updated.invoiceId                = existing.invoiceId;
+  //     updated.orderNo                  = dto.orderNo    ?? existing.orderNo;
+  //     updated.particular               = dto.particular ?? existing.particular;
+  //     updated.rate                     = dto.rate       ?? existing.rate;
+  //     updated.unit                     = dto.unit       ?? existing.unit;
+  //     updated.total                    = dto.total      ?? existing.total;
 
   //     const created = await this.invoiceLineItemDbService.createInvoiceLineItem(updated);
   //     this.logger.info(`Invoice Line Item updated with UId: ${dto.invoiceLineItemUId} version: ${created.version}`);
-  //     return this.mapToInterface(created);
+
+  //     return {
+  //       id:                 created.id,
+  //       invoiceLineItemUId: created.invoiceLineItemUId,
+  //       invoiceId:          created.invoiceId,
+  //       orderNo:            created.orderNo,
+  //       particular:         created.particular,
+  //       rate:               created.rate,
+  //       unit:               created.unit,
+  //       total:              created.total,
+  //     } as any;
   //   } catch (error: any) {
   //     this.logger.error("Error updating invoice line item", error);
   //     throw error.status ? error : { status: 500, message: "Failed to update invoice line item" };
