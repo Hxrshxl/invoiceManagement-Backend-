@@ -1,5 +1,5 @@
 # Source code dump
-Generated: 2026-03-19T05:43:58.620Z
+Generated: 2026-03-19T06:34:02.794Z
 Root: C:\Practice\15\invoiceManagement-Backend-
 Includes: 66 file(s) under src/
 
@@ -2612,7 +2612,7 @@ import Invoice from "../models/invoiceModel";
 import InvoiceLineItem from "../models/invoiceLineItemModel";
 import Payment from "../models/paymentModel";
 
-// ─── ORGANIZATION ─────────────────────────────────────────────────────────────
+// ORGANIZATION 
 export interface IOrganizationDbService {
   createOrganization(organization: Organization): Promise<Organization>;
   findAllOrganizations(): Promise<Organization[]>;
@@ -2622,7 +2622,7 @@ export interface IOrganizationDbService {
   archiveOrganization(id: string): Promise<Organization>;
 }
 
-// ─── CUSTOMER ─────────────────────────────────────────────────────────────────
+// CUSTOMER 
 export interface ICustomerDbService {
   createCustomer(customer: Customer): Promise<Customer>;
   findAllCustomers(): Promise<Customer[]>;
@@ -2633,7 +2633,7 @@ export interface ICustomerDbService {
   archiveCustomer(id: string): Promise<Customer>;
 }
 
-// ─── SOW ──────────────────────────────────────────────────────────────────────
+// SOW 
 export interface ISowDbService {
   createSow(sow: Sow): Promise<Sow>;
   findAllSows(): Promise<Sow[]>;
@@ -2644,7 +2644,7 @@ export interface ISowDbService {
   archiveSow(id: string): Promise<Sow>;
 }
 
-// ─── SOW PAYMENT PLAN ─────────────────────────────────────────────────────────
+//  SOW PAYMENT PLAN 
 export interface ISowPaymentPlanDbService {
   createSowPaymentPlan(plan: SowPaymentPlan): Promise<SowPaymentPlan>;
   findAllSowPaymentPlans(): Promise<SowPaymentPlan[]>;
@@ -2657,7 +2657,7 @@ export interface ISowPaymentPlanDbService {
   archiveSowPaymentPlan(id: string): Promise<SowPaymentPlan>;
 }
 
-// ─── SOW PAYMENT PLAN LINE ITEM ───────────────────────────────────────────────
+//  SOW PAYMENT PLAN LINE ITEM 
 export interface ISowPaymentPlanLineItemDbService {
   createSowPaymentPlanLineItem(lineItem: SowPaymentPlanLineItem): Promise<SowPaymentPlanLineItem>;
   findAllSowPaymentPlanLineItems(): Promise<SowPaymentPlanLineItem[]>;
@@ -2666,7 +2666,7 @@ export interface ISowPaymentPlanLineItemDbService {
   archiveSowPaymentPlanLineItem(id: string): Promise<SowPaymentPlanLineItem>;
 }
 
-// ─── INVOICE ──────────────────────────────────────────────────────────────────
+//  INVOICE 
 export interface IInvoiceDbService {
   createInvoice(invoice: Invoice): Promise<Invoice>;
   findAllInvoices(): Promise<Invoice[]>;
@@ -2679,7 +2679,7 @@ export interface IInvoiceDbService {
   archiveInvoice(id: string): Promise<Invoice>;
 }
 
-// ─── INVOICE LINE ITEM ────────────────────────────────────────────────────────
+//  INVOICE LINE ITEM 
 export interface IInvoiceLineItemDbService {
   createInvoiceLineItem(lineItem: InvoiceLineItem): Promise<InvoiceLineItem>;
   findInvoiceLineItemByUId(invoiceLineItemUId: string): Promise<InvoiceLineItem | null>;
@@ -2687,7 +2687,7 @@ export interface IInvoiceLineItemDbService {
   archiveInvoiceLineItem(id: string): Promise<InvoiceLineItem>;
 }
 
-// ─── PAYMENT ──────────────────────────────────────────────────────────────────
+//  PAYMENT 
 export interface IPaymentDbService {
   createPayment(payment: Payment): Promise<Payment>;
   findPaymentByUId(paymentUId: string): Promise<Payment | null>;
@@ -3398,7 +3398,7 @@ export class InvoiceDbService implements IInvoiceDbService {
   }
 }
 
-// ─── INVOICE LINE ITEM DB SERVICE ────────────────────────────────────────────
+// INVOICE LINE ITEM DB SERVICE 
 
 @injectable()
 export class InvoiceLineItemDbService implements IInvoiceLineItemDbService {
@@ -3429,7 +3429,7 @@ export class InvoiceLineItemDbService implements IInvoiceLineItemDbService {
   }
 }
 
-// ─── PAYMENT DB SERVICE ───────────────────────────────────────────────────────
+//  PAYMENT DB SERVICE 
 
 @injectable()
 export class PaymentDbService implements IPaymentDbService {
@@ -3804,13 +3804,11 @@ import TYPES from "../types/inversifyTypes";
 import Customer from "../models/customerModel";
 import Sow from "../models/sowModel";
 import SowPaymentPlan from "../models/sowPaymentPlanModel";
-import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
 import Invoice from "../models/invoiceModel";
 import { CreateCustomerDto } from "../dto/createCustomerDto";
 import { UpdateCustomerDto } from "../dto/updateCustomerDto";
 import { ICustomerDbService } from "../postgresDB/pgInterface";
 import { ICustomer } from "../interfaces/customerInterface";
-import { InvoiceLineItem, Payment } from "../models";
 
 @injectable()
 class CustomerService {
@@ -3822,113 +3820,6 @@ class CustomerService {
     private readonly logger: Logger
   ) {}
 
-  private mapInvoice(invoice: Invoice) {
-  return {
-    id:                invoice.id,
-    invoiceUId:        invoice.invoiceUId,
-    version:           invoice.version,
-    archive:           invoice.archive,
-    sowId:             invoice.sowId,
-    sowPaymentPlanId:  invoice.sowPaymentPlanId,
-    customerId:        invoice.customerId,
-    status:            invoice.status,
-    totalInvoiceValue: invoice.totalInvoiceValue,
-    invoiceAmount:     invoice.invoiceAmount,
-    invoiceTaxAmount:  invoice.invoiceTaxAmount,
-    invoiceSentOn:     invoice.invoiceSentOn,
-    paymentReceivedOn: invoice.paymentReceivedOn,
-    invoiceVersionNo:  invoice.invoiceVersionNo,
-    paymentId:         invoice.paymentId,
-    createdAt:         invoice.createdAt,
-    updatedAt:         invoice.updatedAt,
-  };
-}
-
-  private mapSowPaymentPlanLineItem(lineItem: SowPaymentPlanLineItem) {
-    return {
-      id:                        lineItem.id,
-      sowPaymentPlanLineItemUId: lineItem.sowPaymentPlanLineItemUId,
-      version:                   lineItem.version,
-      archive:                   lineItem.archive,
-      sowPaymentPlanId:          lineItem.sowPaymentPlanId,
-      sowId:                     lineItem.sowId,
-      orderId:                   lineItem.orderId,
-      particular:                lineItem.particular,
-      rate:                      lineItem.rate,
-      unit:                      lineItem.unit,
-      total:                     lineItem.total,
-      createdAt:                 lineItem.createdAt,
-      updatedAt:                 lineItem.updatedAt,
-    };
-  }
-
-  private mapSowPaymentPlan(plan: SowPaymentPlan) {
-    const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
-    return {
-      id:                 plan.id,
-      sowPaymentPlanUId:  plan.sowPaymentPlanUId,
-      version:            plan.version,
-      archive:            plan.archive,
-      sowId:              plan.sowId,
-      customerId:         plan.customerId,
-      plannedInvoiceDate: plan.plannedInvoiceDate,
-      totalActualAmount:  plan.totalActualAmount,
-      createdAt:          plan.createdAt,
-      updatedAt:          plan.updatedAt,
-      SowPaymentPlanLineItems: lineItems.map((l) => this.mapSowPaymentPlanLineItem(l)),
-    };
-  }
-
-  private mapSow(sow: Sow) {
-    const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
-    const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
-    return {
-      id:                    sow.id,
-      sowUId:                sow.sowUId,
-      version:               sow.version,
-      archive:               sow.archive,
-      customerId:            sow.customerId,
-      title:                 sow.title,
-      totalValue:            sow.totalValue,
-      currency:              sow.currency,
-      validFrom:             sow.validFrom,
-      validUpto:             sow.validUpto,
-      customerPONumber:      sow.customerPONumber,
-      customerSONumber:      sow.customerSONumber,
-      invoiceEmailAddresses: sow.invoiceEmailAddresses,
-      createdAt:             sow.createdAt,
-      updatedAt:             sow.updatedAt,
-      SowPaymentPlans:       plans.map((p) => this.mapSowPaymentPlan(p)),
-      Invoices:              invoices.map((i) => this.mapInvoice(i)),
-    };
-  }
-
-  private mapToInterface(customer: Customer): ICustomer {
-    const sows = ((customer as any).Sows as Sow[]) ?? [];
-    return {
-      id:             customer.id,
-      customerUId:    customer.customerUId,
-      version:        customer.version,
-      archive:        customer.archive,
-      organizationId: customer.organizationId,
-      legalName:      customer.legalName,
-      shortName:      customer.shortName,
-      displayName:    customer.displayName,
-      addressId:      customer.addressId,
-      isMSASigned:    customer.isMSASigned,
-      msaSignedOn:    customer.msaSignedOn,
-      msaValidFrom:   customer.msaValidFrom,
-      msaValidUpto:   customer.msaValidUpto,
-      isNDASigned:    customer.isNDASigned,
-      ndaSignedOn:    customer.ndaSignedOn,
-      ndaValidFrom:   customer.ndaValidFrom,
-      ndaValidUpto:   customer.ndaValidUpto,
-      createdAt:      customer.createdAt,
-      updatedAt:      customer.updatedAt,
-      Sows:           sows.map((s) => this.mapSow(s)),
-    } as any;
-  }
-
   async createCustomer(dto: CreateCustomerDto): Promise<ICustomer> {
     try {
       const existing = await this.customerDbService.findCustomerByLegalName(dto.legalName);
@@ -3936,7 +3827,7 @@ class CustomerService {
         throw { status: 409, message: "Customer with this legal name already exists" };
       }
 
-      const customer = new Customer();
+      const customer          = new Customer();
       customer.organizationId = dto.organizationId;
       customer.legalName      = dto.legalName;
       customer.shortName      = dto.shortName;
@@ -3955,7 +3846,16 @@ class CustomerService {
 
       const created = await this.customerDbService.createCustomer(customer);
       this.logger.info(`Customer created with id: ${created.id}`);
-      return this.mapToInterface(created);
+
+      return {
+        id:             created.id,
+        customerUId:    created.customerUId,
+        organizationId: created.organizationId,
+        legalName:      created.legalName,
+        shortName:      created.shortName,
+        displayName:    created.displayName,
+        Sows:           [],
+      } as any;
     } catch (error: any) {
       this.logger.error("Error creating customer", error);
       throw error.status ? error : { status: 500, message: "Failed to create customer" };
@@ -3966,7 +3866,45 @@ class CustomerService {
     try {
       const customers = await this.customerDbService.findAllCustomers();
       this.logger.info(`Fetched ${customers.length} customers`);
-      return customers.map((c) => this.mapToInterface(c));
+
+      return customers.map((customer) => {
+        const sows = ((customer as any).Sows as Sow[]) ?? [];
+        return {
+          id:             customer.id,
+          customerUId:    customer.customerUId,
+          organizationId: customer.organizationId,
+          legalName:      customer.legalName,
+          shortName:      customer.shortName,
+          displayName:    customer.displayName,
+          Sows: sows.map((sow) => {
+            const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
+            const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
+            return {
+              id:          sow.id,
+              sowUId:      sow.sowUId,
+              title:       sow.title,
+              totalValue:  sow.totalValue,
+              currency:    sow.currency,
+              validFrom:   sow.validFrom,
+              validUpto:   sow.validUpto,
+              SowPaymentPlans: plans.map((plan) => ({
+                id:                 plan.id,
+                sowPaymentPlanUId:  plan.sowPaymentPlanUId,
+                plannedInvoiceDate: plan.plannedInvoiceDate,
+                totalActualAmount:  plan.totalActualAmount,
+              })),
+              Invoices: invoices.map((invoice) => ({
+                id:                invoice.id,
+                invoiceUId:        invoice.invoiceUId,
+                status:            invoice.status,
+                totalInvoiceValue: invoice.totalInvoiceValue,
+                invoiceAmount:     invoice.invoiceAmount,
+                paymentReceivedOn: invoice.paymentReceivedOn,
+              })),
+            };
+          }),
+        } as any;
+      });
     } catch (error: any) {
       this.logger.error("Error fetching customers", error);
       throw error.status ? error : { status: 500, message: "Failed to fetch customers" };
@@ -3980,7 +3918,43 @@ class CustomerService {
         throw { status: 404, message: "Customer not found" };
       }
       this.logger.info(`Fetched customer with UId: ${customerUId}`);
-      return this.mapToInterface(customer);
+
+      const sows = ((customer as any).Sows as Sow[]) ?? [];
+      return {
+        id:             customer.id,
+        customerUId:    customer.customerUId,
+        organizationId: customer.organizationId,
+        legalName:      customer.legalName,
+        shortName:      customer.shortName,
+        displayName:    customer.displayName,
+        Sows: sows.map((sow) => {
+          const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
+          const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
+          return {
+            id:          sow.id,
+            sowUId:      sow.sowUId,
+            title:       sow.title,
+            totalValue:  sow.totalValue,
+            currency:    sow.currency,
+            validFrom:   sow.validFrom,
+            validUpto:   sow.validUpto,
+            SowPaymentPlans: plans.map((plan) => ({
+              id:                 plan.id,
+              sowPaymentPlanUId:  plan.sowPaymentPlanUId,
+              plannedInvoiceDate: plan.plannedInvoiceDate,
+              totalActualAmount:  plan.totalActualAmount,
+            })),
+            Invoices: invoices.map((invoice) => ({
+              id:                invoice.id,
+              invoiceUId:        invoice.invoiceUId,
+              status:            invoice.status,
+              totalInvoiceValue: invoice.totalInvoiceValue,
+              invoiceAmount:     invoice.invoiceAmount,
+              paymentReceivedOn: invoice.paymentReceivedOn,
+            })),
+          };
+        }),
+      } as any;
     } catch (error: any) {
       this.logger.error(`Error fetching customer with UId: ${customerUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch customer" };
@@ -3996,7 +3970,7 @@ class CustomerService {
 
   //     await this.customerDbService.archiveCustomer(existing.id!);
 
-  //     const updated = new Customer();
+  //     const updated          = new Customer();
   //     updated.customerUId    = existing.customerUId;
   //     updated.version        = existing.version + 1;
   //     updated.archive        = false;
@@ -4016,7 +3990,16 @@ class CustomerService {
 
   //     const created = await this.customerDbService.createCustomer(updated);
   //     this.logger.info(`Customer updated with UId: ${dto.customerUId} version: ${created.version}`);
-  //     return this.mapToInterface(created);
+
+  //     return {
+  //       id:             created.id,
+  //       customerUId:    created.customerUId,
+  //       organizationId: created.organizationId,
+  //       legalName:      created.legalName,
+  //       shortName:      created.shortName,
+  //       displayName:    created.displayName,
+  //       Sows:           [],
+  //     } as any;
   //   } catch (error: any) {
   //     this.logger.error("Error updating customer", error);
   //     throw error.status ? error : { status: 500, message: "Failed to update customer" };
@@ -4065,23 +4048,6 @@ class InvoiceLineItemService {
     private readonly logger: Logger
   ) {}
 
-  private mapToInterface(lineItem: InvoiceLineItem): IInvoiceLineItem {
-    return {
-      id:                 lineItem.id,
-      invoiceLineItemUId: lineItem.invoiceLineItemUId,
-      version:            lineItem.version,
-      archive:            lineItem.archive,
-      invoiceId:          lineItem.invoiceId,
-      orderNo:            lineItem.orderNo,
-      particular:         lineItem.particular,
-      rate:               lineItem.rate,
-      unit:               lineItem.unit,
-      total:              lineItem.total,
-      createdAt:          lineItem.createdAt,
-      updatedAt:          lineItem.updatedAt,
-    };
-  }
-
   async createInvoiceLineItem(dto: CreateInvoiceLineItemDto): Promise<IInvoiceLineItem> {
     try {
       const existingInvoice = await this.invoiceDbService.findInvoiceById(dto.invoiceId);
@@ -4089,19 +4055,29 @@ class InvoiceLineItemService {
         throw { status: 404, message: "Invoice not found" };
       }
 
-      const invoiceLineItem = new InvoiceLineItem();
-      invoiceLineItem.invoiceId  = dto.invoiceId;
-      invoiceLineItem.orderNo    = dto.orderNo;
-      invoiceLineItem.particular = dto.particular;
-      invoiceLineItem.rate       = dto.rate;
-      invoiceLineItem.unit       = dto.unit;
-      invoiceLineItem.total      = dto.total;
-      invoiceLineItem.version    = 1;
-      invoiceLineItem.archive    = false;
+      const invoiceLineItem            = new InvoiceLineItem();
+      invoiceLineItem.invoiceId        = dto.invoiceId;
+      invoiceLineItem.orderNo          = dto.orderNo;
+      invoiceLineItem.particular       = dto.particular;
+      invoiceLineItem.rate             = dto.rate;
+      invoiceLineItem.unit             = dto.unit;
+      invoiceLineItem.total            = dto.total;
+      invoiceLineItem.version          = 1;
+      invoiceLineItem.archive          = false;
 
       const created = await this.invoiceLineItemDbService.createInvoiceLineItem(invoiceLineItem);
       this.logger.info(`Invoice Line Item created with id: ${created.id}`);
-      return this.mapToInterface(created);
+
+      return {
+        id:                 created.id,
+        invoiceLineItemUId: created.invoiceLineItemUId,
+        invoiceId:          created.invoiceId,
+        orderNo:            created.orderNo,
+        particular:         created.particular,
+        rate:               created.rate,
+        unit:               created.unit,
+        total:              created.total,
+      } as any;
     } catch (error: any) {
       this.logger.error("Error creating invoice line item", error);
       throw error.status ? error : { status: 500, message: "Failed to create invoice line item" };
@@ -4121,7 +4097,17 @@ class InvoiceLineItemService {
       }
 
       this.logger.info(`Fetched ${lineItems.length} line items for invoiceId: ${invoiceId}`);
-      return lineItems.map((l) => this.mapToInterface(l));
+
+      return lineItems.map((lineItem) => ({
+        id:                 lineItem.id,
+        invoiceLineItemUId: lineItem.invoiceLineItemUId,
+        invoiceId:          lineItem.invoiceId,
+        orderNo:            lineItem.orderNo,
+        particular:         lineItem.particular,
+        rate:               lineItem.rate,
+        unit:               lineItem.unit,
+        total:              lineItem.total,
+      } as any));
     } catch (error: any) {
       this.logger.error(`Error fetching line items for invoiceId: ${invoiceId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch invoice line items" };
@@ -4135,24 +4121,32 @@ class InvoiceLineItemService {
   //       throw { status: 404, message: "Invoice Line Item not found" };
   //     }
 
-  //     // Archive old version
   //     await this.invoiceLineItemDbService.archiveInvoiceLineItem(existing.id!);
 
-  //     // Create new version with updated fields
-  //     const updated = new InvoiceLineItem();
-  //     updated.invoiceLineItemUId = existing.invoiceLineItemUId;
-  //     updated.version            = existing.version + 1;
-  //     updated.archive            = false;
-  //     updated.invoiceId          = existing.invoiceId;
-  //     updated.orderNo            = dto.orderNo    ?? existing.orderNo;
-  //     updated.particular         = dto.particular ?? existing.particular;
-  //     updated.rate               = dto.rate       ?? existing.rate;
-  //     updated.unit               = dto.unit       ?? existing.unit;
-  //     updated.total              = dto.total      ?? existing.total;
+  //     const updated                    = new InvoiceLineItem();
+  //     updated.invoiceLineItemUId       = existing.invoiceLineItemUId;
+  //     updated.version                  = existing.version + 1;
+  //     updated.archive                  = false;
+  //     updated.invoiceId                = existing.invoiceId;
+  //     updated.orderNo                  = dto.orderNo    ?? existing.orderNo;
+  //     updated.particular               = dto.particular ?? existing.particular;
+  //     updated.rate                     = dto.rate       ?? existing.rate;
+  //     updated.unit                     = dto.unit       ?? existing.unit;
+  //     updated.total                    = dto.total      ?? existing.total;
 
   //     const created = await this.invoiceLineItemDbService.createInvoiceLineItem(updated);
   //     this.logger.info(`Invoice Line Item updated with UId: ${dto.invoiceLineItemUId} version: ${created.version}`);
-  //     return this.mapToInterface(created);
+
+  //     return {
+  //       id:                 created.id,
+  //       invoiceLineItemUId: created.invoiceLineItemUId,
+  //       invoiceId:          created.invoiceId,
+  //       orderNo:            created.orderNo,
+  //       particular:         created.particular,
+  //       rate:               created.rate,
+  //       unit:               created.unit,
+  //       total:              created.total,
+  //     } as any;
   //   } catch (error: any) {
   //     this.logger.error("Error updating invoice line item", error);
   //     throw error.status ? error : { status: 500, message: "Failed to update invoice line item" };
@@ -4185,6 +4179,8 @@ import TYPES from "../types/inversifyTypes";
 import Invoice from "../models/invoiceModel";
 import InvoiceLineItem from "../models/invoiceLineItemModel";
 import Payment from "../models/paymentModel";
+import Customer from "../models/customerModel";
+import Organization from "../models/organizationModel";
 import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
 import { IInvoice } from "../interfaces/invoiceInterface";
 import { UpdateInvoiceDto } from "../dto/updateInvoiceDto";
@@ -4209,51 +4205,6 @@ class InvoiceService {
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
-
-  private mapToInterface(invoice: Invoice): IInvoice {
-    const lineItems      = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
-    const payment        = (invoice as any).Payment as Payment | null;
-    const customer       = (invoice as any).Customer as any | null;
-    const organization   = customer?.Organization ?? null;
-
-    return {
-      id:                invoice.id,
-      invoiceUId:        invoice.invoiceUId,
-      version:           invoice.version,
-      archive:           invoice.archive,
-      sowId:             invoice.sowId,
-      sowPaymentPlanId:  invoice.sowPaymentPlanId,
-      customerId:        invoice.customerId,
-      status:            invoice.status,
-      totalInvoiceValue: invoice.totalInvoiceValue,
-      invoiceAmount:     invoice.invoiceAmount,
-      invoiceTaxAmount:  invoice.invoiceTaxAmount,
-      invoiceSentOn:     invoice.invoiceSentOn,
-      paymentReceivedOn: invoice.paymentReceivedOn,
-      invoiceVersionNo:  invoice.invoiceVersionNo,
-      paymentId:         invoice.paymentId,
-      createdAt:         invoice.createdAt,
-      updatedAt:         invoice.updatedAt,
-
-      organizationName:  organization?.legalOrganizationName ?? null,
-      customerName:      customer?.legalName                 ?? null,
-
-      InvoiceLineItems: lineItems.map((l) => ({
-        orderNo:    l.orderNo,
-        particular: l.particular,
-        rate:       l.rate,
-        unit:       l.unit,
-        total:      l.total,
-      })),
-
-      Payment: payment ? {
-        paymentDate:   payment.paymentDate,
-        isFullPayment: payment.isFullPayment,
-        bankPayment:   payment.bankPayment,
-      } : null,
-
-    } as any;
-  }
 
   async generateInvoicesForToday(date?: string): Promise<{ invoices: IInvoice[], skipped: number }> {
     try {
@@ -4290,17 +4241,17 @@ class InvoiceService {
           continue;
         }
 
-        const invoice = new Invoice();
-        invoice.sowId             = plan.sowId;
-        invoice.customerId        = plan.customerId;
-        invoice.sowPaymentPlanId  = plan.id!;
-        invoice.status            = "Drafted";
-        invoice.totalInvoiceValue = plan.totalActualAmount;
-        invoice.invoiceAmount     = plan.totalActualAmount;
-        invoice.invoiceTaxAmount  = 0;
-        invoice.invoiceVersionNo  = 1;
-        invoice.version           = 1;
-        invoice.archive           = false;
+        const invoice               = new Invoice();
+        invoice.sowId               = plan.sowId;
+        invoice.customerId          = plan.customerId;
+        invoice.sowPaymentPlanId    = plan.id!;
+        invoice.status              = "Drafted";
+        invoice.totalInvoiceValue   = plan.totalActualAmount;
+        invoice.invoiceAmount       = plan.totalActualAmount;
+        invoice.invoiceTaxAmount    = 0;
+        invoice.invoiceVersionNo    = 1;
+        invoice.version             = 1;
+        invoice.archive             = false;
 
         const createdInvoice = await this.invoiceDbService.createInvoice(invoice);
         this.logger.info(`Invoice created with id: ${createdInvoice.id} for plan: ${plan.id}`);
@@ -4308,20 +4259,29 @@ class InvoiceService {
         const lineItems = (plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[];
 
         for (const lineItem of lineItems) {
-          const invoiceLineItem = new InvoiceLineItem();
-          invoiceLineItem.invoiceId  = createdInvoice.id!;
-          invoiceLineItem.orderNo    = lineItem.orderId;
-          invoiceLineItem.particular = lineItem.particular;
-          invoiceLineItem.rate       = lineItem.rate;
-          invoiceLineItem.unit       = lineItem.unit;
-          invoiceLineItem.total      = lineItem.total;
-          invoiceLineItem.version    = 1;
-          invoiceLineItem.archive    = false;
+          const invoiceLineItem            = new InvoiceLineItem();
+          invoiceLineItem.invoiceId        = createdInvoice.id!;
+          invoiceLineItem.orderNo          = lineItem.orderId;
+          invoiceLineItem.particular       = lineItem.particular;
+          invoiceLineItem.rate             = lineItem.rate;
+          invoiceLineItem.unit             = lineItem.unit;
+          invoiceLineItem.total            = lineItem.total;
+          invoiceLineItem.version          = 1;
+          invoiceLineItem.archive          = false;
 
           await this.invoiceLineItemDbService.createInvoiceLineItem(invoiceLineItem);
         }
 
-        invoices.push(this.mapToInterface(createdInvoice));
+        invoices.push({
+          id:                createdInvoice.id,
+          invoiceUId:        createdInvoice.invoiceUId,
+          status:            createdInvoice.status,
+          totalInvoiceValue: createdInvoice.totalInvoiceValue,
+          invoiceAmount:     createdInvoice.invoiceAmount,
+          paymentReceivedOn: createdInvoice.paymentReceivedOn,
+          InvoiceLineItems:  [],
+          Payment:           null,
+        } as any);
       }
 
       this.logger.info(`Generated ${invoices.length} invoices, skipped ${skipped}`);
@@ -4336,7 +4296,36 @@ class InvoiceService {
     try {
       const invoices = await this.invoiceDbService.findAllInvoices();
       this.logger.info(`Fetched ${invoices.length} invoices`);
-      return invoices.map((i) => this.mapToInterface(i));
+
+      return invoices.map((invoice) => {
+        const lineItems    = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+        const payment      = (invoice as any).Payment as Payment | null;
+        const customer     = (invoice as any).Customer as Customer | null;
+        const organization = customer ? (customer as any).Organization as Organization | null : null;
+
+        return {
+          id:                invoice.id,
+          invoiceUId:        invoice.invoiceUId,
+          status:            invoice.status,
+          totalInvoiceValue: invoice.totalInvoiceValue,
+          invoiceAmount:     invoice.invoiceAmount,
+          paymentReceivedOn: invoice.paymentReceivedOn,
+          organizationName:  organization?.legalOrganizationName ?? null,
+          customerName:      customer?.legalName                 ?? null,
+          InvoiceLineItems: lineItems.map((li) => ({
+            orderNo:    li.orderNo,
+            particular: li.particular,
+            rate:       li.rate,
+            unit:       li.unit,
+            total:      li.total,
+          })),
+          Payment: payment ? {
+            paymentDate:   payment.paymentDate,
+            isFullPayment: payment.isFullPayment,
+            bankPayment:   payment.bankPayment,
+          } : null,
+        } as any;
+      });
     } catch (error: any) {
       this.logger.error("Error fetching invoices", error);
       throw error.status ? error : { status: 500, message: "Failed to fetch invoices" };
@@ -4350,7 +4339,34 @@ class InvoiceService {
         throw { status: 404, message: "Invoice not found" };
       }
       this.logger.info(`Fetched invoice with UId: ${invoiceUId}`);
-      return this.mapToInterface(invoice);
+
+      const lineItems    = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+      const payment      = (invoice as any).Payment as Payment | null;
+      const customer     = (invoice as any).Customer as Customer | null;
+      const organization = customer ? (customer as any).Organization as Organization | null : null;
+
+      return {
+        id:                invoice.id,
+        invoiceUId:        invoice.invoiceUId,
+        status:            invoice.status,
+        totalInvoiceValue: invoice.totalInvoiceValue,
+        invoiceAmount:     invoice.invoiceAmount,
+        paymentReceivedOn: invoice.paymentReceivedOn,
+        organizationName:  organization?.legalOrganizationName ?? null,
+        customerName:      customer?.legalName                 ?? null,
+        InvoiceLineItems: lineItems.map((li) => ({
+          orderNo:    li.orderNo,
+          particular: li.particular,
+          rate:       li.rate,
+          unit:       li.unit,
+          total:      li.total,
+        })),
+        Payment: payment ? {
+          paymentDate:   payment.paymentDate,
+          isFullPayment: payment.isFullPayment,
+          bankPayment:   payment.bankPayment,
+        } : null,
+      } as any;
     } catch (error: any) {
       this.logger.error(`Error fetching invoice with UId: ${invoiceUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch invoice" };
@@ -4372,7 +4388,17 @@ class InvoiceService {
 
       const updated = await this.invoiceDbService.updateInvoiceStatus(invoice.id!, "Approved");
       this.logger.info(`Invoice approved with UId: ${invoiceUId}`);
-      return this.mapToInterface(updated);
+
+      return {
+        id:                updated.id,
+        invoiceUId:        updated.invoiceUId,
+        status:            updated.status,
+        totalInvoiceValue: updated.totalInvoiceValue,
+        invoiceAmount:     updated.invoiceAmount,
+        paymentReceivedOn: updated.paymentReceivedOn,
+        InvoiceLineItems:  [],
+        Payment:           null,
+      } as any;
     } catch (error: any) {
       this.logger.error(`Error approving invoice with UId: ${invoiceUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to approve invoice" };
@@ -4394,61 +4420,81 @@ class InvoiceService {
 
       const updated = await this.invoiceDbService.updateInvoiceStatus(invoice.id!, "Cancelled");
       this.logger.info(`Invoice cancelled with UId: ${invoiceUId}`);
-      return this.mapToInterface(updated);
+
+      return {
+        id:                updated.id,
+        invoiceUId:        updated.invoiceUId,
+        status:            updated.status,
+        totalInvoiceValue: updated.totalInvoiceValue,
+        invoiceAmount:     updated.invoiceAmount,
+        paymentReceivedOn: updated.paymentReceivedOn,
+        InvoiceLineItems:  [],
+        Payment:           null,
+      } as any;
     } catch (error: any) {
       this.logger.error(`Error cancelling invoice with UId: ${invoiceUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to cancel invoice" };
     }
   }
 
-  async updateInvoice(dto: UpdateInvoiceDto): Promise<IInvoice> {
-    try {
-      const existing = await this.invoiceDbService.findInvoiceByUId(dto.invoiceUId);
-      if (!existing) {
-        throw { status: 404, message: "Invoice not found" };
-      }
+  // async updateInvoice(dto: UpdateInvoiceDto): Promise<IInvoice> {
+  //   try {
+  //     const existing = await this.invoiceDbService.findInvoiceByUId(dto.invoiceUId);
+  //     if (!existing) {
+  //       throw { status: 404, message: "Invoice not found" };
+  //     }
 
-      await this.invoiceDbService.archiveInvoice(existing.id!);
+  //     await this.invoiceDbService.archiveInvoice(existing.id!);
 
-      const updated = new Invoice();
-      updated.invoiceUId        = existing.invoiceUId;
-      updated.version           = existing.version + 1;
-      updated.archive           = false;
-      updated.sowId             = existing.sowId;
-      updated.sowPaymentPlanId  = existing.sowPaymentPlanId;
-      updated.customerId        = existing.customerId;
-      updated.status            = dto.status            ?? existing.status;
-      updated.totalInvoiceValue = dto.totalInvoiceValue ?? existing.totalInvoiceValue;
-      updated.invoiceAmount     = dto.invoiceAmount     ?? existing.invoiceAmount;
-      updated.invoiceTaxAmount  = dto.invoiceTaxAmount  ?? existing.invoiceTaxAmount;
-      updated.invoiceVersionNo  = dto.invoiceVersionNo  ?? existing.invoiceVersionNo;
-      updated.invoiceSentOn     = existing.invoiceSentOn;
-      updated.paymentReceivedOn = existing.paymentReceivedOn;
-      updated.paymentId         = existing.paymentId;
+  //     const updated               = new Invoice();
+  //     updated.invoiceUId          = existing.invoiceUId;
+  //     updated.version             = existing.version + 1;
+  //     updated.archive             = false;
+  //     updated.sowId               = existing.sowId;
+  //     updated.sowPaymentPlanId    = existing.sowPaymentPlanId;
+  //     updated.customerId          = existing.customerId;
+  //     updated.status              = dto.status            ?? existing.status;
+  //     updated.totalInvoiceValue   = dto.totalInvoiceValue ?? existing.totalInvoiceValue;
+  //     updated.invoiceAmount       = dto.invoiceAmount     ?? existing.invoiceAmount;
+  //     updated.invoiceTaxAmount    = dto.invoiceTaxAmount  ?? existing.invoiceTaxAmount;
+  //     updated.invoiceVersionNo    = dto.invoiceVersionNo  ?? existing.invoiceVersionNo;
+  //     updated.invoiceSentOn       = existing.invoiceSentOn;
+  //     updated.paymentReceivedOn   = existing.paymentReceivedOn;
+  //     updated.paymentId           = existing.paymentId;
 
-      const created = await this.invoiceDbService.createInvoice(updated);
-      this.logger.info(`Invoice updated with UId: ${dto.invoiceUId} version: ${created.version}`);
-      return this.mapToInterface(created);
-    } catch (error: any) {
-      this.logger.error("Error updating invoice", error);
-      throw error.status ? error : { status: 500, message: "Failed to update invoice" };
-    }
-  }
+  //     const created = await this.invoiceDbService.createInvoice(updated);
+  //     this.logger.info(`Invoice updated with UId: ${dto.invoiceUId} version: ${created.version}`);
 
-  async deleteInvoice(invoiceUId: string): Promise<{ message: string }> {
-    try {
-      const existing = await this.invoiceDbService.findInvoiceByUId(invoiceUId);
-      if (!existing) {
-        throw { status: 404, message: "Invoice not found" };
-      }
-      await this.invoiceDbService.archiveInvoice(existing.id!);
-      this.logger.info(`Invoice deleted with UId: ${invoiceUId}`);
-      return { message: "Invoice deleted successfully" };
-    } catch (error: any) {
-      this.logger.error("Error deleting invoice", error);
-      throw error.status ? error : { status: 500, message: "Failed to delete invoice" };
-    }
-  }
+  //     return {
+  //       id:                created.id,
+  //       invoiceUId:        created.invoiceUId,
+  //       status:            created.status,
+  //       totalInvoiceValue: created.totalInvoiceValue,
+  //       invoiceAmount:     created.invoiceAmount,
+  //       paymentReceivedOn: created.paymentReceivedOn,
+  //       InvoiceLineItems:  [],
+  //       Payment:           null,
+  //     } as any;
+  //   } catch (error: any) {
+  //     this.logger.error("Error updating invoice", error);
+  //     throw error.status ? error : { status: 500, message: "Failed to update invoice" };
+  //   }
+  // }
+
+  // async deleteInvoice(invoiceUId: string): Promise<{ message: string }> {
+  //   try {
+  //     const existing = await this.invoiceDbService.findInvoiceByUId(invoiceUId);
+  //     if (!existing) {
+  //       throw { status: 404, message: "Invoice not found" };
+  //     }
+  //     await this.invoiceDbService.archiveInvoice(existing.id!);
+  //     this.logger.info(`Invoice deleted with UId: ${invoiceUId}`);
+  //     return { message: "Invoice deleted successfully" };
+  //   } catch (error: any) {
+  //     this.logger.error("Error deleting invoice", error);
+  //     throw error.status ? error : { status: 500, message: "Failed to delete invoice" };
+  //   }
+  // }
 
   async generateInvoicePdf(invoiceUId: string): Promise<Buffer> {
     try {
@@ -4457,9 +4503,9 @@ class InvoiceService {
         throw { status: 404, message: "Invoice not found" };
       }
 
-      const lineItems      = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
-      const customer       = (invoice as any).Customer as any | null;
-      const organization   = customer?.Organization ?? null;
+      const lineItems    = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+      const customer     = (invoice as any).Customer as Customer | null;
+      const organization = customer ? (customer as any).Organization as Organization | null : null;
 
       return new Promise((resolve, reject) => {
         const PDFDocument       = require("pdfkit");
@@ -4479,15 +4525,15 @@ class InvoiceService {
         doc.font("Helvetica-Bold").text("Invoice Details", { underline: true });
         doc.moveDown(0.5);
         doc.font("Helvetica");
-        doc.text(`Invoice UId       : ${invoice.invoiceUId}`);
-        doc.text(`Organization      : ${organization?.legalOrganizationName ?? "N/A"}`);
-        doc.text(`Customer          : ${customer?.legalName ?? "N/A"}`);
-        doc.text(`Status            : ${invoice.status}`);
-        doc.text(`Invoice Amount    : $${invoice.invoiceAmount}`);
-        doc.text(`Tax Amount        : $${invoice.invoiceTaxAmount}`);
-        doc.text(`Total Value       : $${invoice.totalInvoiceValue}`);
-        doc.text(`Payment Received  : ${invoice.paymentReceivedOn ?? "N/A"}`);
-        doc.text(`Created At        : ${invoice.createdAt}`);
+        doc.text(`Invoice UId      : ${invoice.invoiceUId}`);
+        doc.text(`Organization     : ${organization?.legalOrganizationName ?? "N/A"}`);
+        doc.text(`Customer         : ${customer?.legalName ?? "N/A"}`);
+        doc.text(`Status           : ${invoice.status}`);
+        doc.text(`Invoice Amount   : $${invoice.invoiceAmount}`);
+        doc.text(`Tax Amount       : $${invoice.invoiceTaxAmount}`);
+        doc.text(`Total Value      : $${invoice.totalInvoiceValue}`);
+        doc.text(`Payment Received : ${invoice.paymentReceivedOn ?? "N/A"}`);
+        doc.text(`Created At       : ${invoice.createdAt}`);
 
         doc.moveDown();
         doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
@@ -4549,7 +4595,6 @@ import Organization from "../models/organizationModel";
 import Customer from "../models/customerModel";
 import Sow from "../models/sowModel";
 import SowPaymentPlan from "../models/sowPaymentPlanModel";
-import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
 import { CreateOrganizationDto } from "../dto/createOrganizationDto";
 import { UpdateOrganizationDto } from "../dto/updateOrganizationDto";
 import { IOrganizationDbService } from "../postgresDB/pgInterface";
@@ -4565,124 +4610,6 @@ class OrganizationService {
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
-
-  // ─── MAP SOW PAYMENT PLAN LINE ITEM ─────────────────────────────────────────
-
-  private mapSowPaymentPlanLineItem(lineItem: SowPaymentPlanLineItem) {
-    return {
-      id:                        lineItem.id,
-      sowPaymentPlanLineItemUId: lineItem.sowPaymentPlanLineItemUId,
-      version:                   lineItem.version,
-      archive:                   lineItem.archive,
-      sowPaymentPlanId:          lineItem.sowPaymentPlanId,
-      sowId:                     lineItem.sowId,
-      orderId:                   lineItem.orderId,
-      particular:                lineItem.particular,
-      rate:                      lineItem.rate,
-      unit:                      lineItem.unit,
-      total:                     lineItem.total,
-      createdAt:                 lineItem.createdAt,
-      updatedAt:                 lineItem.updatedAt,
-    };
-  }
-
-  // ─── MAP SOW PAYMENT PLAN ────────────────────────────────────────────────────
-
-  private mapSowPaymentPlan(plan: SowPaymentPlan) {
-    const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
-    return {
-      id:                      plan.id,
-      sowPaymentPlanUId:       plan.sowPaymentPlanUId,
-      version:                 plan.version,
-      archive:                 plan.archive,
-      sowId:                   plan.sowId,
-      customerId:              plan.customerId,
-      plannedInvoiceDate:      plan.plannedInvoiceDate,
-      totalActualAmount:       plan.totalActualAmount,
-      createdAt:               plan.createdAt,
-      updatedAt:               plan.updatedAt,
-      SowPaymentPlanLineItems: lineItems.map((l) => this.mapSowPaymentPlanLineItem(l)),
-    };
-  }
-
-  // ─── MAP SOW ─────────────────────────────────────────────────────────────────
-
-  private mapSow(sow: Sow) {
-    const plans = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
-    return {
-      id:                    sow.id,
-      sowUId:                sow.sowUId,
-      version:               sow.version,
-      archive:               sow.archive,
-      customerId:            sow.customerId,
-      title:                 sow.title,
-      totalValue:            sow.totalValue,
-      currency:              sow.currency,
-      validFrom:             sow.validFrom,
-      validUpto:             sow.validUpto,
-      customerPONumber:      sow.customerPONumber,
-      customerSONumber:      sow.customerSONumber,
-      invoiceEmailAddresses: sow.invoiceEmailAddresses,
-      createdAt:             sow.createdAt,
-      updatedAt:             sow.updatedAt,
-      SowPaymentPlans:       plans.map((p) => this.mapSowPaymentPlan(p)),
-    };
-  }
-
-  // ─── MAP CUSTOMER ────────────────────────────────────────────────────────────
-
-  private mapCustomer(customer: Customer) {
-    const sows = ((customer as any).Sows as Sow[]) ?? [];
-    return {
-      id:             customer.id,
-      customerUId:    customer.customerUId,
-      version:        customer.version,
-      archive:        customer.archive,
-      organizationId: customer.organizationId,
-      legalName:      customer.legalName,
-      shortName:      customer.shortName,
-      displayName:    customer.displayName,
-      addressId:      customer.addressId,
-      isMSASigned:    customer.isMSASigned,
-      msaSignedOn:    customer.msaSignedOn,
-      msaValidFrom:   customer.msaValidFrom,
-      msaValidUpto:   customer.msaValidUpto,
-      isNDASigned:    customer.isNDASigned,
-      ndaSignedOn:    customer.ndaSignedOn,
-      ndaValidFrom:   customer.ndaValidFrom,
-      ndaValidUpto:   customer.ndaValidUpto,
-      createdAt:      customer.createdAt,
-      updatedAt:      customer.updatedAt,
-      Sows:           sows.map((s) => this.mapSow(s)),
-    };
-  }
-
-  // ─── MAP ORGANIZATION ────────────────────────────────────────────────────────
-
-  private mapToInterface(org: Organization): IOrganization {
-    const customers = ((org as any).Customers as Customer[]) ?? [];
-    return {
-      id:                    org.id,
-      organizationUId:       org.organizationUId,
-      version:               org.version,
-      archive:               org.archive,
-      gstNo:                 org.gstNo,
-      panNo:                 org.panNo,
-      legalOrganizationName: org.legalOrganizationName,
-      invoiceTemplateId:     org.invoiceTemplateId,
-      shortName:             org.shortName,
-      contactName:           org.contactName,
-      displayName:           org.displayName,
-      email:                 org.email,
-      addressId:             org.addressId,
-      phone:                 org.phone,
-      createdAt:             org.createdAt,
-      updatedAt:             org.updatedAt,
-      Customers:             customers.map((c) => this.mapCustomer(c)),
-    } as any;
-  }
-
-  // ─── CREATE ORGANIZATION ─────────────────────────────────────────────────────
 
   async createOrganization(dto: CreateOrganizationDto): Promise<IOrganization> {
     try {
@@ -4705,41 +4632,123 @@ class OrganizationService {
 
       const created = await this.organizationDbService.createOrganization(organization);
       this.logger.info(`Organization created with id: ${created.id}`);
-      return this.mapToInterface(created);
+
+      return {
+        id:                    created.id,
+        organizationUId:       created.organizationUId,
+        legalOrganizationName: created.legalOrganizationName,
+        contactName:           created.contactName,
+        displayName:           created.displayName,
+        email:                 created.email,
+        phone:                 created.phone,
+        Customers:             [],
+      } as any;
     } catch (error: any) {
       this.logger.error("Error creating organization", error);
       throw error.status ? error : { status: 500, message: "Failed to create organization" };
     }
   }
 
-  // ─── GET ALL ORGANIZATIONS ───────────────────────────────────────────────────
-
   async getAllOrganizations(): Promise<IOrganization[]> {
     try {
       const organizations = await this.organizationDbService.findAllOrganizations();
       this.logger.info(`Fetched ${organizations.length} organizations`);
-      return organizations.map((org) => this.mapToInterface(org));
+
+      return organizations.map((org) => {
+        const customers = ((org as any).Customers as Customer[]) ?? [];
+        return {
+          id:                    org.id,
+          organizationUId:       org.organizationUId,
+          legalOrganizationName: org.legalOrganizationName,
+          contactName:           org.contactName,
+          displayName:           org.displayName,
+          email:                 org.email,
+          phone:                 org.phone,
+          Customers: customers.map((customer) => {
+            const sows = ((customer as any).Sows as Sow[]) ?? [];
+            return {
+              id:          customer.id,
+              customerUId: customer.customerUId,
+              legalName:   customer.legalName,
+              shortName:   customer.shortName,
+              displayName: customer.displayName,
+              Sows: sows.map((sow) => {
+                const plans = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
+                return {
+                  id:              sow.id,
+                  sowUId:          sow.sowUId,
+                  title:           sow.title,
+                  totalValue:      sow.totalValue,
+                  currency:        sow.currency,
+                  validFrom:       sow.validFrom,
+                  validUpto:       sow.validUpto,
+                  SowPaymentPlans: plans.map((plan) => ({
+                    id:                 plan.id,
+                    sowPaymentPlanUId:  plan.sowPaymentPlanUId,
+                    plannedInvoiceDate: plan.plannedInvoiceDate,
+                    totalActualAmount:  plan.totalActualAmount,
+                  })),
+                };
+              }),
+            };
+          }),
+        } as any;
+      });
     } catch (error: any) {
       this.logger.error("Error fetching organizations", error);
       throw error.status ? error : { status: 500, message: "Failed to fetch organizations" };
     }
   }
 
-  // ─── GET ORGANIZATION BY ID ──────────────────────────────────────────────────
-
   async getOrganizationById(organizationUId: string): Promise<IOrganization> {
     try {
-      const organization = await this.organizationDbService.findOrganizationByUId(organizationUId);
-      if (!organization) throw { status: 404, message: "Organization not found" };
+      const org = await this.organizationDbService.findOrganizationByUId(organizationUId);
+      if (!org) throw { status: 404, message: "Organization not found" };
       this.logger.info(`Fetched organization with UId: ${organizationUId}`);
-      return this.mapToInterface(organization);
+
+      const customers = ((org as any).Customers as Customer[]) ?? [];
+      return {
+        id:                    org.id,
+        organizationUId:       org.organizationUId,
+        legalOrganizationName: org.legalOrganizationName,
+        contactName:           org.contactName,
+        displayName:           org.displayName,
+        email:                 org.email,
+        phone:                 org.phone,
+        Customers: customers.map((customer) => {
+          const sows = ((customer as any).Sows as Sow[]) ?? [];
+          return {
+            id:          customer.id,
+            customerUId: customer.customerUId,
+            legalName:   customer.legalName,
+            shortName:   customer.shortName,
+            displayName: customer.displayName,
+            Sows: sows.map((sow) => {
+              const plans = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
+              return {
+                id:              sow.id,
+                sowUId:          sow.sowUId,
+                title:           sow.title,
+                totalValue:      sow.totalValue,
+                currency:        sow.currency,
+                validFrom:       sow.validFrom,
+                validUpto:       sow.validUpto,
+                SowPaymentPlans: plans.map((plan) => ({
+                  id:                 plan.id,
+                  sowPaymentPlanUId:  plan.sowPaymentPlanUId,
+                  plannedInvoiceDate: plan.plannedInvoiceDate,
+                  totalActualAmount:  plan.totalActualAmount,
+                })),
+              };
+            }),
+          };
+        }),
+      } as any;
     } catch (error: any) {
       this.logger.error(`Error fetching organization with UId: ${organizationUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch organization" };
     }
   }
-
-  // ─── UPDATE ORGANIZATION ─────────────────────────────────────────────────────
 
   // async updateOrganization(dto: UpdateOrganizationDto): Promise<IOrganization> {
   //   try {
@@ -4753,31 +4762,39 @@ class OrganizationService {
 
   //     await this.organizationDbService.archiveOrganization(existing.id!);
 
-  //     const updated                    = new Organization();
-  //     updated.organizationUId          = existing.organizationUId;
-  //     updated.version                  = existing.version + 1;
-  //     updated.archive                  = false;
-  //     updated.gstNo                    = dto.gstNo                 ?? existing.gstNo;
-  //     updated.panNo                    = dto.panNo                 ?? existing.panNo;
-  //     updated.legalOrganizationName    = dto.legalOrganizationName ?? existing.legalOrganizationName;
-  //     updated.invoiceTemplateId        = dto.invoiceTemplateId     ?? existing.invoiceTemplateId;
-  //     updated.shortName                = dto.shortName             ?? existing.shortName;
-  //     updated.contactName              = dto.contactName           ?? existing.contactName;
-  //     updated.displayName              = dto.displayName           ?? existing.displayName;
-  //     updated.email                    = dto.email                 ?? existing.email;
-  //     updated.addressId                = dto.addressId             ?? existing.addressId;
-  //     updated.phone                    = dto.phone                 ?? existing.phone;
+  //     const updated                 = new Organization();
+  //     updated.organizationUId       = existing.organizationUId;
+  //     updated.version               = existing.version + 1;
+  //     updated.archive               = false;
+  //     updated.gstNo                 = dto.gstNo                 ?? existing.gstNo;
+  //     updated.panNo                 = dto.panNo                 ?? existing.panNo;
+  //     updated.legalOrganizationName = dto.legalOrganizationName ?? existing.legalOrganizationName;
+  //     updated.invoiceTemplateId     = dto.invoiceTemplateId     ?? existing.invoiceTemplateId;
+  //     updated.shortName             = dto.shortName             ?? existing.shortName;
+  //     updated.contactName           = dto.contactName           ?? existing.contactName;
+  //     updated.displayName           = dto.displayName           ?? existing.displayName;
+  //     updated.email                 = dto.email                 ?? existing.email;
+  //     updated.addressId             = dto.addressId             ?? existing.addressId;
+  //     updated.phone                 = dto.phone                 ?? existing.phone;
 
   //     const created = await this.organizationDbService.createOrganization(updated);
   //     this.logger.info(`Organization updated — new id: ${created.id}, version: ${created.version}`);
-  //     return this.mapToInterface(created);
+
+  //     return {
+  //       id:                    created.id,
+  //       organizationUId:       created.organizationUId,
+  //       legalOrganizationName: created.legalOrganizationName,
+  //       contactName:           created.contactName,
+  //       displayName:           created.displayName,
+  //       email:                 created.email,
+  //       phone:                 created.phone,
+  //       Customers:             [],
+  //     } as any;
   //   } catch (error: any) {
   //     this.logger.error("Error updating organization", error);
   //     throw error.status ? error : { status: 500, message: "Failed to update organization" };
   //   }
   // }
-
-  // ─── DELETE ORGANIZATION ─────────────────────────────────────────────────────
 
   // async deleteOrganization(organizationUId: string): Promise<{ message: string }> {
   //   try {
@@ -4820,25 +4837,6 @@ class PaymentService {
     private readonly logger: Logger
   ) {}
 
-  private mapToInterface(payment: Payment): IPayment {
-    return {
-      id:            payment.id,
-      paymentUId:    payment.paymentUId,
-      version:       payment.version,
-      archive:       payment.archive,
-      invoiceId:     payment.invoiceId,
-      paymentDate:   payment.paymentDate,
-      forExAmount:   payment.forExAmount,
-      currency:      payment.currency,
-      indianAmount:  payment.indianAmount,
-      isFullPayment: payment.isFullPayment,
-      bankPayment:   payment.bankPayment,
-      details:       payment.details,
-      createdAt:     payment.createdAt,
-      updatedAt:     payment.updatedAt,
-    };
-  }
-
   async createPayment(dto: CreatePaymentDto): Promise<IPayment> {
     try {
       const invoice = await this.invoiceDbService.findInvoiceById(dto.invoiceId);
@@ -4857,17 +4855,17 @@ class PaymentService {
         throw { status: 409, message: "Payment already recorded for this invoice" };
       }
 
-      const payment = new Payment();
-      payment.invoiceId     = dto.invoiceId;
-      payment.paymentDate   = dto.paymentDate;
-      payment.forExAmount   = dto.forExAmount;
-      payment.currency      = dto.currency;
-      payment.indianAmount  = dto.indianAmount;
-      payment.isFullPayment = dto.isFullPayment;
-      payment.bankPayment   = dto.bankPayment ?? "";
-      payment.details       = dto.details     ?? "";
-      payment.version       = 1;
-      payment.archive       = false;
+      const payment          = new Payment();
+      payment.invoiceId      = dto.invoiceId;
+      payment.paymentDate    = dto.paymentDate;
+      payment.forExAmount    = dto.forExAmount;
+      payment.currency       = dto.currency;
+      payment.indianAmount   = dto.indianAmount;
+      payment.isFullPayment  = dto.isFullPayment;
+      payment.bankPayment    = dto.bankPayment ?? "";
+      payment.details        = dto.details     ?? "";
+      payment.version        = 1;
+      payment.archive        = false;
 
       const created = await this.paymentDbService.createPayment(payment);
 
@@ -4878,7 +4876,19 @@ class PaymentService {
       );
 
       this.logger.info(`Payment created with id: ${created.id}`);
-      return this.mapToInterface(created);
+
+      return {
+        id:            created.id,
+        paymentUId:    created.paymentUId,
+        invoiceId:     created.invoiceId,
+        paymentDate:   created.paymentDate,
+        forExAmount:   created.forExAmount,
+        currency:      created.currency,
+        indianAmount:  created.indianAmount,
+        isFullPayment: created.isFullPayment,
+        bankPayment:   created.bankPayment,
+        details:       created.details,
+      } as any;
     } catch (error: any) {
       this.logger.error("Error creating payment", error);
       throw error.status ? error : { status: 500, message: "Failed to create payment" };
@@ -4898,12 +4908,82 @@ class PaymentService {
       }
 
       this.logger.info(`Fetched payment for invoiceId: ${invoiceId}`);
-      return this.mapToInterface(payment);
+
+      return {
+        id:            payment.id,
+        paymentUId:    payment.paymentUId,
+        invoiceId:     payment.invoiceId,
+        paymentDate:   payment.paymentDate,
+        forExAmount:   payment.forExAmount,
+        currency:      payment.currency,
+        indianAmount:  payment.indianAmount,
+        isFullPayment: payment.isFullPayment,
+        bankPayment:   payment.bankPayment,
+        details:       payment.details,
+      } as any;
     } catch (error: any) {
       this.logger.error(`Error fetching payment for invoiceId: ${invoiceId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch payment" };
     }
   }
+
+  // async updatePayment(dto: UpdatePaymentDto): Promise<IPayment> {
+  //   try {
+  //     const existing = await this.paymentDbService.findPaymentByUId(dto.paymentUId);
+  //     if (!existing) {
+  //       throw { status: 404, message: "Payment not found" };
+  //     }
+
+  //     await this.paymentDbService.archivePayment(existing.id!);
+
+  //     const updated          = new Payment();
+  //     updated.paymentUId     = existing.paymentUId;
+  //     updated.version        = existing.version + 1;
+  //     updated.archive        = false;
+  //     updated.invoiceId      = existing.invoiceId;
+  //     updated.paymentDate    = dto.paymentDate   ?? existing.paymentDate;
+  //     updated.forExAmount    = dto.forExAmount   ?? existing.forExAmount;
+  //     updated.currency       = dto.currency      ?? existing.currency;
+  //     updated.indianAmount   = dto.indianAmount  ?? existing.indianAmount;
+  //     updated.isFullPayment  = dto.isFullPayment ?? existing.isFullPayment;
+  //     updated.bankPayment    = dto.bankPayment   ?? existing.bankPayment;
+  //     updated.details        = dto.details       ?? existing.details;
+
+  //     const created = await this.paymentDbService.createPayment(updated);
+  //     this.logger.info(`Payment updated with UId: ${dto.paymentUId} version: ${created.version}`);
+
+  //     return {
+  //       id:            created.id,
+  //       paymentUId:    created.paymentUId,
+  //       invoiceId:     created.invoiceId,
+  //       paymentDate:   created.paymentDate,
+  //       forExAmount:   created.forExAmount,
+  //       currency:      created.currency,
+  //       indianAmount:  created.indianAmount,
+  //       isFullPayment: created.isFullPayment,
+  //       bankPayment:   created.bankPayment,
+  //       details:       created.details,
+  //     } as any;
+  //   } catch (error: any) {
+  //     this.logger.error("Error updating payment", error);
+  //     throw error.status ? error : { status: 500, message: "Failed to update payment" };
+  //   }
+  // }
+
+  // async deletePayment(paymentUId: string): Promise<{ message: string }> {
+  //   try {
+  //     const existing = await this.paymentDbService.findPaymentByUId(paymentUId);
+  //     if (!existing) {
+  //       throw { status: 404, message: "Payment not found" };
+  //     }
+  //     await this.paymentDbService.archivePayment(existing.id!);
+  //     this.logger.info(`Payment deleted with UId: ${paymentUId}`);
+  //     return { message: "Payment deleted successfully" };
+  //   } catch (error: any) {
+  //     this.logger.error("Error deleting payment", error);
+  //     throw error.status ? error : { status: 500, message: "Failed to delete payment" };
+  //   }
+  // }
 }
 
 export default PaymentService;
@@ -4914,10 +4994,12 @@ import { injectable, inject } from "inversify";
 import { Logger } from "winston";
 import TYPES from "../types/inversifyTypes";
 import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
-import { ISowPaymentPlanLineItem } from "../interfaces/sowPaymentPlanLineItemInterface";
+import SowPaymentPlan from "../models/sowPaymentPlanModel";
+import Sow from "../models/sowModel";
 import { CreateSowPaymentPlanLineItemDto } from "../dto/createSowPaymentPlanLineItemDto";
 import { UpdateSowPaymentPlanLineItemDto } from "../dto/updateSowPaymentPlanLineItemDto";
 import { ISowPaymentPlanLineItemDbService } from "../postgresDB/pgInterface";
+import { ISowPaymentPlanLineItem } from "../interfaces/sowPaymentPlanLineItemInterface";
 
 @injectable()
 class SowPaymentPlanLineItemService {
@@ -4929,40 +5011,33 @@ class SowPaymentPlanLineItemService {
     private readonly logger: Logger
   ) {}
 
-  private mapToInterface(lineItem: SowPaymentPlanLineItem): ISowPaymentPlanLineItem {
-    return {
-      id:                        lineItem.id,
-      sowPaymentPlanLineItemUId: lineItem.sowPaymentPlanLineItemUId,
-      version:                   lineItem.version,
-      archive:                   lineItem.archive,
-      sowPaymentPlanId:          lineItem.sowPaymentPlanId,
-      sowId:                     lineItem.sowId,
-      orderId:                   lineItem.orderId,
-      particular:                lineItem.particular,
-      rate:                      lineItem.rate,
-      unit:                      lineItem.unit,
-      total:                     lineItem.total,
-      createdAt:                 lineItem.createdAt,
-      updatedAt:                 lineItem.updatedAt,
-    };
-  }
-
   async createSowPaymentPlanLineItem(dto: CreateSowPaymentPlanLineItemDto): Promise<ISowPaymentPlanLineItem> {
     try {
-      const lineItem = new SowPaymentPlanLineItem();
-      lineItem.sowPaymentPlanId = dto.sowPaymentPlanId;
-      lineItem.sowId            = dto.sowId;
-      lineItem.orderId          = dto.orderId;
-      lineItem.particular       = dto.particular;
-      lineItem.rate             = dto.rate;
-      lineItem.unit             = dto.unit;
-      lineItem.total            = dto.total;
-      lineItem.version          = 1;
-      lineItem.archive          = false;
+      const lineItem                    = new SowPaymentPlanLineItem();
+      lineItem.sowPaymentPlanId         = dto.sowPaymentPlanId;
+      lineItem.sowId                    = dto.sowId;
+      lineItem.orderId                  = dto.orderId;
+      lineItem.particular               = dto.particular;
+      lineItem.rate                     = dto.rate;
+      lineItem.unit                     = dto.unit;
+      lineItem.total                    = dto.total;
+      lineItem.version                  = 1;
+      lineItem.archive                  = false;
 
       const created = await this.sowPaymentPlanLineItemDbService.createSowPaymentPlanLineItem(lineItem);
       this.logger.info(`SOW Payment Plan Line Item created with id: ${created.id}`);
-      return this.mapToInterface(created);
+
+      return {
+        id:                        created.id,
+        sowPaymentPlanLineItemUId: created.sowPaymentPlanLineItemUId,
+        sowPaymentPlanId:          created.sowPaymentPlanId,
+        sowId:                     created.sowId,
+        orderId:                   created.orderId,
+        particular:                created.particular,
+        rate:                      created.rate,
+        unit:                      created.unit,
+        total:                     created.total,
+      } as any;
     } catch (error: any) {
       this.logger.error("Error creating SOW Payment Plan Line Item", error);
       throw error.status ? error : { status: 500, message: "Failed to create SOW Payment Plan Line Item" };
@@ -4973,7 +5048,24 @@ class SowPaymentPlanLineItemService {
     try {
       const lineItems = await this.sowPaymentPlanLineItemDbService.findAllSowPaymentPlanLineItems();
       this.logger.info(`Fetched ${lineItems.length} SOW Payment Plan Line Items`);
-      return lineItems.map((l) => this.mapToInterface(l));
+
+      return lineItems.map((lineItem) => {
+        const plan = (lineItem as any).SowPaymentPlan as SowPaymentPlan | null;
+        const sow  = (lineItem as any).Sow as Sow | null;
+        return {
+          id:                        lineItem.id,
+          sowPaymentPlanLineItemUId: lineItem.sowPaymentPlanLineItemUId,
+          sowPaymentPlanId:          lineItem.sowPaymentPlanId,
+          sowId:                     lineItem.sowId,
+          orderId:                   lineItem.orderId,
+          particular:                lineItem.particular,
+          rate:                      lineItem.rate,
+          unit:                      lineItem.unit,
+          total:                     lineItem.total,
+          plannedInvoiceDate:        plan?.plannedInvoiceDate ?? null,
+          sowTitle:                  sow?.title               ?? null,
+        } as any;
+      });
     } catch (error: any) {
       this.logger.error("Error fetching SOW Payment Plan Line Items", error);
       throw error.status ? error : { status: 500, message: "Failed to fetch SOW Payment Plan Line Items" };
@@ -4987,7 +5079,24 @@ class SowPaymentPlanLineItemService {
         throw { status: 404, message: "No line items found for this SOW Payment Plan" };
       }
       this.logger.info(`Fetched ${lineItems.length} line items for sowPaymentPlanId: ${sowPaymentPlanId}`);
-      return lineItems.map((l) => this.mapToInterface(l));
+
+      return lineItems.map((lineItem) => {
+        const plan = (lineItem as any).SowPaymentPlan as SowPaymentPlan | null;
+        const sow  = (lineItem as any).Sow as Sow | null;
+        return {
+          id:                        lineItem.id,
+          sowPaymentPlanLineItemUId: lineItem.sowPaymentPlanLineItemUId,
+          sowPaymentPlanId:          lineItem.sowPaymentPlanId,
+          sowId:                     lineItem.sowId,
+          orderId:                   lineItem.orderId,
+          particular:                lineItem.particular,
+          rate:                      lineItem.rate,
+          unit:                      lineItem.unit,
+          total:                     lineItem.total,
+          plannedInvoiceDate:        plan?.plannedInvoiceDate ?? null,
+          sowTitle:                  sow?.title               ?? null,
+        } as any;
+      });
     } catch (error: any) {
       this.logger.error(`Error fetching line items for sowPaymentPlanId: ${sowPaymentPlanId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch SOW Payment Plan Line Items" };
@@ -5001,25 +5110,34 @@ class SowPaymentPlanLineItemService {
   //       throw { status: 404, message: "SOW Payment Plan Line Item not found" };
   //     }
 
-  //     // Archive old version
   //     await this.sowPaymentPlanLineItemDbService.archiveSowPaymentPlanLineItem(existing.id!);
 
-  //     // Create new version with updated fields
-  //     const updated = new SowPaymentPlanLineItem();
+  //     const updated                    = new SowPaymentPlanLineItem();
   //     updated.sowPaymentPlanLineItemUId = existing.sowPaymentPlanLineItemUId;
-  //     updated.version                   = existing.version + 1;
-  //     updated.archive                   = false;
-  //     updated.sowPaymentPlanId          = existing.sowPaymentPlanId;
-  //     updated.sowId                     = existing.sowId;
-  //     updated.orderId                   = dto.orderId    ?? existing.orderId;
-  //     updated.particular                = dto.particular ?? existing.particular;
-  //     updated.rate                      = dto.rate       ?? existing.rate;
-  //     updated.unit                      = dto.unit       ?? existing.unit;
-  //     updated.total                     = dto.total      ?? existing.total;
+  //     updated.version                  = existing.version + 1;
+  //     updated.archive                  = false;
+  //     updated.sowPaymentPlanId         = existing.sowPaymentPlanId;
+  //     updated.sowId                    = existing.sowId;
+  //     updated.orderId                  = dto.orderId    ?? existing.orderId;
+  //     updated.particular               = dto.particular ?? existing.particular;
+  //     updated.rate                     = dto.rate       ?? existing.rate;
+  //     updated.unit                     = dto.unit       ?? existing.unit;
+  //     updated.total                    = dto.total      ?? existing.total;
 
   //     const created = await this.sowPaymentPlanLineItemDbService.createSowPaymentPlanLineItem(updated);
   //     this.logger.info(`SOW Payment Plan Line Item updated with UId: ${dto.sowPaymentPlanLineItemUId} version: ${created.version}`);
-  //     return this.mapToInterface(created);
+
+  //     return {
+  //       id:                        created.id,
+  //       sowPaymentPlanLineItemUId: created.sowPaymentPlanLineItemUId,
+  //       sowPaymentPlanId:          created.sowPaymentPlanId,
+  //       sowId:                     created.sowId,
+  //       orderId:                   created.orderId,
+  //       particular:                created.particular,
+  //       rate:                      created.rate,
+  //       unit:                      created.unit,
+  //       total:                     created.total,
+  //     } as any;
   //   } catch (error: any) {
   //     this.logger.error("Error updating SOW Payment Plan Line Item", error);
   //     throw error.status ? error : { status: 500, message: "Failed to update SOW Payment Plan Line Item" };
@@ -5054,6 +5172,8 @@ import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
 import Invoice from "../models/invoiceModel";
 import InvoiceLineItem from "../models/invoiceLineItemModel";
 import Payment from "../models/paymentModel";
+import Sow from "../models/sowModel";
+import Customer from "../models/customerModel";
 import { ISowPaymentPlan } from "../interfaces/sowPaymentPlanInterface";
 import { CreateSowPaymentPlanDto } from "../dto/createSowPaymentPlanDto";
 import { UpdateSowPaymentPlanDto } from "../dto/updateSowPaymentPlanDto";
@@ -5072,79 +5192,6 @@ class SowPaymentPlanService {
     private readonly logger: Logger
   ) {}
 
-  // ─── MAP PAYMENT ─────────────────────────────────────────────────────────────
-
-
-
-  // ─── MAP INVOICE ─────────────────────────────────────────────────────────────
-
-  private mapInvoice(invoice: Invoice) {
-    const lineItems = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
-    const payment   = (invoice as any).Payment as Payment | null;
-    return {
-      id:                invoice.id,
-      invoiceUId:        invoice.invoiceUId,
-      version:           invoice.version,
-      archive:           invoice.archive,
-      sowId:             invoice.sowId,
-      sowPaymentPlanId:  invoice.sowPaymentPlanId,
-      customerId:        invoice.customerId,
-      status:            invoice.status,
-      totalInvoiceValue: invoice.totalInvoiceValue,
-      invoiceAmount:     invoice.invoiceAmount,
-      invoiceTaxAmount:  invoice.invoiceTaxAmount,
-      invoiceSentOn:     invoice.invoiceSentOn,
-      paymentReceivedOn: invoice.paymentReceivedOn,
-      invoiceVersionNo:  invoice.invoiceVersionNo,
-      paymentId:         invoice.paymentId,
-      createdAt:         invoice.createdAt,
-      updatedAt:         invoice.updatedAt
-    };
-  }
-
-  // ─── MAP SOW PAYMENT PLAN LINE ITEM ─────────────────────────────────────────
-
-  private mapSowPaymentPlanLineItem(lineItem: SowPaymentPlanLineItem) {
-    return {
-      id:                        lineItem.id,
-      sowPaymentPlanLineItemUId: lineItem.sowPaymentPlanLineItemUId,
-      version:                   lineItem.version,
-      archive:                   lineItem.archive,
-      sowPaymentPlanId:          lineItem.sowPaymentPlanId,
-      sowId:                     lineItem.sowId,
-      orderId:                   lineItem.orderId,
-      particular:                lineItem.particular,
-      rate:                      lineItem.rate,
-      unit:                      lineItem.unit,
-      total:                     lineItem.total,
-      createdAt:                 lineItem.createdAt,
-      updatedAt:                 lineItem.updatedAt,
-    };
-  }
-
-  // ─── MAP SOW PAYMENT PLAN ────────────────────────────────────────────────────
-
-  private mapToInterface(plan: SowPaymentPlan): ISowPaymentPlan {
-    const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
-    const invoices  = ((plan as any).Invoices as Invoice[]) ?? [];
-    return {
-      id:                 plan.id,
-      sowPaymentPlanUId:  plan.sowPaymentPlanUId,
-      version:            plan.version,
-      archive:            plan.archive,
-      sowId:              plan.sowId,
-      customerId:         plan.customerId,
-      plannedInvoiceDate: plan.plannedInvoiceDate,
-      totalActualAmount:  plan.totalActualAmount,
-      createdAt:          plan.createdAt,
-      updatedAt:          plan.updatedAt,
-      SowPaymentPlanLineItems: lineItems.map((l) => this.mapSowPaymentPlanLineItem(l)),
-      Invoices:                invoices.map((i) => this.mapInvoice(i)),
-    } as any;
-  }
-
-  // ─── CREATE SOW PAYMENT PLAN ─────────────────────────────────────────────────
-
   async createSowPaymentPlan(dto: CreateSowPaymentPlanDto): Promise<ISowPaymentPlan> {
     try {
       const sow = await this.sowDbService.findSowById(dto.sowId);
@@ -5162,37 +5209,95 @@ class SowPaymentPlanService {
         };
       }
 
-      const plan = new SowPaymentPlan();
-      plan.sowId              = dto.sowId;
-      plan.customerId         = dto.customerId;
-      plan.plannedInvoiceDate = dto.plannedInvoiceDate;
-      plan.totalActualAmount  = dto.totalActualAmount;
-      plan.version            = 1;
-      plan.archive            = false;
+      const plan                   = new SowPaymentPlan();
+      plan.sowId                   = dto.sowId;
+      plan.customerId              = dto.customerId;
+      plan.plannedInvoiceDate      = dto.plannedInvoiceDate;
+      plan.totalActualAmount       = dto.totalActualAmount;
+      plan.version                 = 1;
+      plan.archive                 = false;
 
       const created = await this.sowPaymentPlanDbService.createSowPaymentPlan(plan);
       this.logger.info(`SOW Payment Plan created with id: ${created.id}`);
-      return this.mapToInterface(created);
+
+      return {
+        id:                 created.id,
+        sowPaymentPlanUId:  created.sowPaymentPlanUId,
+        sowId:              created.sowId,
+        customerId:         created.customerId,
+        plannedInvoiceDate: created.plannedInvoiceDate,
+        totalActualAmount:  created.totalActualAmount,
+        SowPaymentPlanLineItems: [],
+        Invoices:                [],
+      } as any;
     } catch (error: any) {
       this.logger.error("Error creating SOW Payment Plan", error);
       throw error.status ? error : { status: 500, message: "Failed to create SOW Payment Plan" };
     }
   }
 
-  // ─── GET ALL SOW PAYMENT PLANS ───────────────────────────────────────────────
-
   async getAllSowPaymentPlans(): Promise<ISowPaymentPlan[]> {
     try {
       const plans = await this.sowPaymentPlanDbService.findAllSowPaymentPlans();
       this.logger.info(`Fetched ${plans.length} SOW Payment Plans`);
-      return plans.map((p) => this.mapToInterface(p));
+
+      return plans.map((plan) => {
+        const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
+        const invoices  = ((plan as any).Invoices as Invoice[])                               ?? [];
+        const customer  = (plan as any).Customer as Customer | null;
+        const sow       = (plan as any).Sow as Sow | null;
+
+        return {
+          id:                 plan.id,
+          sowPaymentPlanUId:  plan.sowPaymentPlanUId,
+          sowId:              plan.sowId,
+          customerId:         plan.customerId,
+          plannedInvoiceDate: plan.plannedInvoiceDate,
+          totalActualAmount:  plan.totalActualAmount,
+          customerName:       customer?.legalName ?? null,
+          sowTitle:           sow?.title          ?? null,
+          SowPaymentPlanLineItems: lineItems.map((li) => ({
+            id:                        li.id,
+            sowPaymentPlanLineItemUId: li.sowPaymentPlanLineItemUId,
+            orderId:                   li.orderId,
+            particular:                li.particular,
+            rate:                      li.rate,
+            unit:                      li.unit,
+            total:                     li.total,
+          })),
+          Invoices: invoices.map((invoice) => {
+            const invoiceLineItems = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+            const payment          = (invoice as any).Payment as Payment | null;
+            return {
+              id:                invoice.id,
+              invoiceUId:        invoice.invoiceUId,
+              status:            invoice.status,
+              totalInvoiceValue: invoice.totalInvoiceValue,
+              invoiceAmount:     invoice.invoiceAmount,
+              paymentReceivedOn: invoice.paymentReceivedOn,
+              InvoiceLineItems: invoiceLineItems.map((li) => ({
+                id:                 li.id,
+                invoiceLineItemUId: li.invoiceLineItemUId,
+                orderNo:            li.orderNo,
+                particular:         li.particular,
+                rate:               li.rate,
+                unit:               li.unit,
+                total:              li.total,
+              })),
+              Payment: payment ? {
+                paymentDate:   payment.paymentDate,
+                isFullPayment: payment.isFullPayment,
+                bankPayment:   payment.bankPayment,
+              } : null,
+            };
+          }),
+        } as any;
+      });
     } catch (error: any) {
       this.logger.error("Error fetching SOW Payment Plans", error);
       throw error.status ? error : { status: 500, message: "Failed to fetch SOW Payment Plans" };
     }
   }
-
-  // ─── GET SOW PAYMENT PLAN BY ID ──────────────────────────────────────────────
 
   async getSowPaymentPlanById(sowPaymentPlanUId: string): Promise<ISowPaymentPlan> {
     try {
@@ -5201,14 +5306,62 @@ class SowPaymentPlanService {
         throw { status: 404, message: "SOW Payment Plan not found" };
       }
       this.logger.info(`Fetched SOW Payment Plan with UId: ${sowPaymentPlanUId}`);
-      return this.mapToInterface(plan);
+
+      const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
+      const invoices  = ((plan as any).Invoices as Invoice[])                               ?? [];
+      const customer  = (plan as any).Customer as Customer | null;
+      const sow       = (plan as any).Sow as Sow | null;
+
+      return {
+        id:                 plan.id,
+        sowPaymentPlanUId:  plan.sowPaymentPlanUId,
+        sowId:              plan.sowId,
+        customerId:         plan.customerId,
+        plannedInvoiceDate: plan.plannedInvoiceDate,
+        totalActualAmount:  plan.totalActualAmount,
+        customerName:       customer?.legalName ?? null,
+        sowTitle:           sow?.title          ?? null,
+        SowPaymentPlanLineItems: lineItems.map((li) => ({
+          id:                        li.id,
+          sowPaymentPlanLineItemUId: li.sowPaymentPlanLineItemUId,
+          orderId:                   li.orderId,
+          particular:                li.particular,
+          rate:                      li.rate,
+          unit:                      li.unit,
+          total:                     li.total,
+        })),
+        Invoices: invoices.map((invoice) => {
+          const invoiceLineItems = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+          const payment          = (invoice as any).Payment as Payment | null;
+          return {
+            id:                invoice.id,
+            invoiceUId:        invoice.invoiceUId,
+            status:            invoice.status,
+            totalInvoiceValue: invoice.totalInvoiceValue,
+            invoiceAmount:     invoice.invoiceAmount,
+            paymentReceivedOn: invoice.paymentReceivedOn,
+            InvoiceLineItems: invoiceLineItems.map((li) => ({
+              id:                 li.id,
+              invoiceLineItemUId: li.invoiceLineItemUId,
+              orderNo:            li.orderNo,
+              particular:         li.particular,
+              rate:               li.rate,
+              unit:               li.unit,
+              total:              li.total,
+            })),
+            Payment: payment ? {
+              paymentDate:   payment.paymentDate,
+              isFullPayment: payment.isFullPayment,
+              bankPayment:   payment.bankPayment,
+            } : null,
+          };
+        }),
+      } as any;
     } catch (error: any) {
       this.logger.error(`Error fetching SOW Payment Plan with UId: ${sowPaymentPlanUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch SOW Payment Plan" };
     }
   }
-
-  // ─── GET SOW PAYMENT PLANS BY SOW ID ─────────────────────────────────────────
 
   async getSowPaymentPlansBySowId(sowId: string): Promise<ISowPaymentPlan[]> {
     try {
@@ -5217,14 +5370,42 @@ class SowPaymentPlanService {
         throw { status: 404, message: "No SOW Payment Plans found for this SOW" };
       }
       this.logger.info(`Fetched ${plans.length} SOW Payment Plans for sowId: ${sowId}`);
-      return plans.map((p) => this.mapToInterface(p));
+
+      return plans.map((plan) => {
+        const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
+        const invoices  = ((plan as any).Invoices as Invoice[])                               ?? [];
+
+        return {
+          id:                 plan.id,
+          sowPaymentPlanUId:  plan.sowPaymentPlanUId,
+          sowId:              plan.sowId,
+          customerId:         plan.customerId,
+          plannedInvoiceDate: plan.plannedInvoiceDate,
+          totalActualAmount:  plan.totalActualAmount,
+          SowPaymentPlanLineItems: lineItems.map((li) => ({
+            id:                        li.id,
+            sowPaymentPlanLineItemUId: li.sowPaymentPlanLineItemUId,
+            orderId:                   li.orderId,
+            particular:                li.particular,
+            rate:                      li.rate,
+            unit:                      li.unit,
+            total:                     li.total,
+          })),
+          Invoices: invoices.map((invoice) => ({
+            id:                invoice.id,
+            invoiceUId:        invoice.invoiceUId,
+            status:            invoice.status,
+            totalInvoiceValue: invoice.totalInvoiceValue,
+            invoiceAmount:     invoice.invoiceAmount,
+            paymentReceivedOn: invoice.paymentReceivedOn,
+          })),
+        } as any;
+      });
     } catch (error: any) {
       this.logger.error(`Error fetching SOW Payment Plans for sowId: ${sowId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch SOW Payment Plans" };
     }
   }
-
-  // ─── UPDATE SOW PAYMENT PLAN ─────────────────────────────────────────────────
 
   // async updateSowPaymentPlan(dto: UpdateSowPaymentPlanDto): Promise<ISowPaymentPlan> {
   //   try {
@@ -5250,25 +5431,33 @@ class SowPaymentPlanService {
 
   //     await this.sowPaymentPlanDbService.archiveSowPaymentPlan(existing.id!);
 
-  //     const updated = new SowPaymentPlan();
-  //     updated.sowPaymentPlanUId  = existing.sowPaymentPlanUId;
-  //     updated.version            = existing.version + 1;
-  //     updated.archive            = false;
-  //     updated.sowId              = existing.sowId;
-  //     updated.customerId         = existing.customerId;
-  //     updated.plannedInvoiceDate = dto.plannedInvoiceDate ?? existing.plannedInvoiceDate;
-  //     updated.totalActualAmount  = dto.totalActualAmount  ?? existing.totalActualAmount;
+  //     const updated                = new SowPaymentPlan();
+  //     updated.sowPaymentPlanUId    = existing.sowPaymentPlanUId;
+  //     updated.version              = existing.version + 1;
+  //     updated.archive              = false;
+  //     updated.sowId                = existing.sowId;
+  //     updated.customerId           = existing.customerId;
+  //     updated.plannedInvoiceDate   = dto.plannedInvoiceDate ?? existing.plannedInvoiceDate;
+  //     updated.totalActualAmount    = dto.totalActualAmount  ?? existing.totalActualAmount;
 
   //     const created = await this.sowPaymentPlanDbService.createSowPaymentPlan(updated);
   //     this.logger.info(`SOW Payment Plan updated with UId: ${dto.sowPaymentPlanUId} version: ${created.version}`);
-  //     return this.mapToInterface(created);
+
+  //     return {
+  //       id:                 created.id,
+  //       sowPaymentPlanUId:  created.sowPaymentPlanUId,
+  //       sowId:              created.sowId,
+  //       customerId:         created.customerId,
+  //       plannedInvoiceDate: created.plannedInvoiceDate,
+  //       totalActualAmount:  created.totalActualAmount,
+  //       SowPaymentPlanLineItems: [],
+  //       Invoices:                [],
+  //     } as any;
   //   } catch (error: any) {
   //     this.logger.error("Error updating SOW Payment Plan", error);
   //     throw error.status ? error : { status: 500, message: "Failed to update SOW Payment Plan" };
   //   }
   // }
-
-  // // ─── DELETE SOW PAYMENT PLAN ─────────────────────────────────────────────────
 
   // async deleteSowPaymentPlan(sowPaymentPlanUId: string): Promise<{ message: string }> {
   //   try {
@@ -5285,12 +5474,11 @@ class SowPaymentPlanService {
   //   }
   // }
 
-  // ─── GET INVOICE SCHEDULE ────────────────────────────────────────────────────
-
   async getInvoiceSchedule(): Promise<any[]> {
     try {
       const plans = await this.sowPaymentPlanDbService.findSowPaymentPlansWithInvoices();
       this.logger.info(`Fetched invoice schedule for ${plans.length} payment plans`);
+
       return plans.map((plan) => {
         const invoices = (plan as any).Invoices as any[];
         const invoice  = invoices && invoices.length > 0 ? invoices[0] : null;
@@ -5341,140 +5529,6 @@ class SowService {
     private readonly logger: Logger
   ) {}
 
-  // ─── MAP PAYMENT ────────────────────────────────────────────────────────────
-
-  // private mapPayment(payment: Payment | null | undefined) {
-  //   if (!payment) return null;
-  //   return {
-  //     id:            payment.id,
-  //     paymentUId:    payment.paymentUId,
-  //     version:       payment.version,
-  //     archive:       payment.archive,
-  //     invoiceId:     payment.invoiceId,
-  //     paymentDate:   payment.paymentDate,
-  //     forExAmount:   payment.forExAmount,
-  //     currency:      payment.currency,
-  //     indianAmount:  payment.indianAmount,
-  //     isFullPayment: payment.isFullPayment,
-  //     bankPayment:   payment.bankPayment,
-  //     details:       payment.details,
-  //     createdAt:     payment.createdAt,
-  //     updatedAt:     payment.updatedAt,
-  //   };
-  // }
-
-  // ─── MAP INVOICE LINE ITEM ───────────────────────────────────────────────────
-
-  // private mapInvoiceLineItem(lineItem: InvoiceLineItem) {
-  //   return {
-  //     id:                 lineItem.id,
-  //     invoiceLineItemUId: lineItem.invoiceLineItemUId,
-  //     version:            lineItem.version,
-  //     archive:            lineItem.archive,
-  //     invoiceId:          lineItem.invoiceId,
-  //     orderNo:            lineItem.orderNo,
-  //     particular:         lineItem.particular,
-  //     rate:               lineItem.rate,
-  //     unit:               lineItem.unit,
-  //     total:              lineItem.total,
-  //     createdAt:          lineItem.createdAt,
-  //     updatedAt:          lineItem.updatedAt,
-  //   };
-  // }
-
-  // ─── MAP INVOICE ─────────────────────────────────────────────────────────────
-
-  private mapInvoice(invoice: Invoice) {
-    const lineItems = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
-    const payment   = (invoice as any).Payment as Payment | null;
-    return {
-      id:                invoice.id,
-      invoiceUId:        invoice.invoiceUId,
-      version:           invoice.version,
-      archive:           invoice.archive,
-      sowId:             invoice.sowId,
-      sowPaymentPlanId:  invoice.sowPaymentPlanId,
-      customerId:        invoice.customerId,
-      status:            invoice.status,
-      totalInvoiceValue: invoice.totalInvoiceValue,
-      invoiceAmount:     invoice.invoiceAmount,
-      invoiceTaxAmount:  invoice.invoiceTaxAmount,
-      invoiceSentOn:     invoice.invoiceSentOn,
-      paymentReceivedOn: invoice.paymentReceivedOn,
-      invoiceVersionNo:  invoice.invoiceVersionNo,
-      paymentId:         invoice.paymentId,
-      createdAt:         invoice.createdAt,
-      updatedAt:         invoice.updatedAt
-    };
-  }
-
-  // ─── MAP SOW PAYMENT PLAN LINE ITEM ─────────────────────────────────────────
-
-  private mapSowPaymentPlanLineItem(lineItem: SowPaymentPlanLineItem) {
-    return {
-      id:                        lineItem.id,
-      sowPaymentPlanLineItemUId: lineItem.sowPaymentPlanLineItemUId,
-      version:                   lineItem.version,
-      archive:                   lineItem.archive,
-      sowPaymentPlanId:          lineItem.sowPaymentPlanId,
-      sowId:                     lineItem.sowId,
-      orderId:                   lineItem.orderId,
-      particular:                lineItem.particular,
-      rate:                      lineItem.rate,
-      unit:                      lineItem.unit,
-      total:                     lineItem.total,
-      createdAt:                 lineItem.createdAt,
-      updatedAt:                 lineItem.updatedAt,
-    };
-  }
-
-  // ─── MAP SOW PAYMENT PLAN ────────────────────────────────────────────────────
-
-  private mapSowPaymentPlan(plan: SowPaymentPlan) {
-    const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
-    return {
-      id:                 plan.id,
-      sowPaymentPlanUId:  plan.sowPaymentPlanUId,
-      version:            plan.version,
-      archive:            plan.archive,
-      sowId:              plan.sowId,
-      customerId:         plan.customerId,
-      plannedInvoiceDate: plan.plannedInvoiceDate,
-      totalActualAmount:  plan.totalActualAmount,
-      createdAt:          plan.createdAt,
-      updatedAt:          plan.updatedAt,
-      SowPaymentPlanLineItems: lineItems.map((l) => this.mapSowPaymentPlanLineItem(l)),
-    };
-  }
-
-  // ─── MAP SOW ─────────────────────────────────────────────────────────────────
-
-  private mapToInterface(sow: Sow): ISow {
-    const plans   = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
-    const invoices = ((sow as any).Invoices as Invoice[]) ?? [];
-    return {
-      id:                    sow.id,
-      sowUId:                sow.sowUId,
-      version:               sow.version,
-      archive:               sow.archive,
-      customerId:            sow.customerId,
-      title:                 sow.title,
-      totalValue:            sow.totalValue,
-      currency:              sow.currency,
-      validFrom:             sow.validFrom,
-      validUpto:             sow.validUpto,
-      customerPONumber:      sow.customerPONumber,
-      customerSONumber:      sow.customerSONumber,
-      invoiceEmailAddresses: sow.invoiceEmailAddresses,
-      createdAt:             sow.createdAt,
-      updatedAt:             sow.updatedAt,
-      SowPaymentPlans:       plans.map((p) => this.mapSowPaymentPlan(p)),
-      Invoices:              invoices.map((i) => this.mapInvoice(i)),
-    } as any;
-  }
-
-  // ─── CREATE SOW ──────────────────────────────────────────────────────────────
-
   async createSow(dto: CreateSowDto): Promise<ISow> {
     try {
       const existing = await this.sowDbService.findSowByPONumber(dto.customerPONumber);
@@ -5482,42 +5536,114 @@ class SowService {
         throw { status: 409, message: "SOW with this PO number already exists" };
       }
 
-      const sow = new Sow();
-      sow.customerId            = dto.customerId;
-      sow.title                 = dto.title;
-      sow.totalValue            = dto.totalValue;
-      sow.currency              = dto.currency;
-      sow.validFrom             = dto.validFrom;
-      sow.validUpto             = dto.validUpto;
-      sow.customerPONumber      = dto.customerPONumber;
-      sow.customerSONumber      = dto.customerSONumber;
-      sow.invoiceEmailAddresses = dto.invoiceEmailAddresses;
-      sow.version               = 1;
-      sow.archive               = false;
+      const sow                    = new Sow();
+      sow.customerId               = dto.customerId;
+      sow.title                    = dto.title;
+      sow.totalValue               = dto.totalValue;
+      sow.currency                 = dto.currency;
+      sow.validFrom                = dto.validFrom;
+      sow.validUpto                = dto.validUpto;
+      sow.customerPONumber         = dto.customerPONumber;
+      sow.customerSONumber         = dto.customerSONumber;
+      sow.invoiceEmailAddresses    = dto.invoiceEmailAddresses;
+      sow.version                  = 1;
+      sow.archive                  = false;
 
       const created = await this.sowDbService.createSow(sow);
       this.logger.info(`SOW created with id: ${created.id}`);
-      return this.mapToInterface(created);
+
+      return {
+        id:                    created.id,
+        sowUId:                created.sowUId,
+        customerId:            created.customerId,
+        title:                 created.title,
+        totalValue:            created.totalValue,
+        currency:              created.currency,
+        validFrom:             created.validFrom,
+        validUpto:             created.validUpto,
+        customerPONumber:      created.customerPONumber,
+        customerSONumber:      created.customerSONumber,
+        invoiceEmailAddresses: created.invoiceEmailAddresses,
+        SowPaymentPlans:       [],
+        Invoices:              [],
+      } as any;
     } catch (error: any) {
       this.logger.error("Error creating SOW", error);
       throw error.status ? error : { status: 500, message: "Failed to create SOW" };
     }
   }
 
-  // ─── GET ALL SOWS ────────────────────────────────────────────────────────────
-
   async getAllSows(): Promise<ISow[]> {
     try {
       const sows = await this.sowDbService.findAllSows();
       this.logger.info(`Fetched ${sows.length} SOWs`);
-      return sows.map((s) => this.mapToInterface(s));
+
+      return sows.map((sow) => {
+        const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
+        const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
+        return {
+          id:                    sow.id,
+          sowUId:                sow.sowUId,
+          customerId:            sow.customerId,
+          title:                 sow.title,
+          totalValue:            sow.totalValue,
+          currency:              sow.currency,
+          validFrom:             sow.validFrom,
+          validUpto:             sow.validUpto,
+          customerPONumber:      sow.customerPONumber,
+          customerSONumber:      sow.customerSONumber,
+          invoiceEmailAddresses: sow.invoiceEmailAddresses,
+          SowPaymentPlans: plans.map((plan) => {
+            const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
+            return {
+              id:                 plan.id,
+              sowPaymentPlanUId:  plan.sowPaymentPlanUId,
+              plannedInvoiceDate: plan.plannedInvoiceDate,
+              totalActualAmount:  plan.totalActualAmount,
+              SowPaymentPlanLineItems: lineItems.map((li) => ({
+                id:                        li.id,
+                sowPaymentPlanLineItemUId: li.sowPaymentPlanLineItemUId,
+                orderId:                   li.orderId,
+                particular:                li.particular,
+                rate:                      li.rate,
+                unit:                      li.unit,
+                total:                     li.total,
+              })),
+            };
+          }),
+          Invoices: invoices.map((invoice) => {
+            const lineItems = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+            const payment   = (invoice as any).Payment as Payment | null;
+            return {
+              id:                invoice.id,
+              invoiceUId:        invoice.invoiceUId,
+              status:            invoice.status,
+              totalInvoiceValue: invoice.totalInvoiceValue,
+              invoiceAmount:     invoice.invoiceAmount,
+              paymentReceivedOn: invoice.paymentReceivedOn,
+              InvoiceLineItems: lineItems.map((li) => ({
+                id:                 li.id,
+                invoiceLineItemUId: li.invoiceLineItemUId,
+                orderNo:            li.orderNo,
+                particular:         li.particular,
+                rate:               li.rate,
+                unit:               li.unit,
+                total:              li.total,
+              })),
+              Payment: payment ? {
+                paymentDate:   payment.paymentDate,
+                isFullPayment: payment.isFullPayment,
+                bankPayment:   payment.bankPayment,
+              } : null,
+            };
+          }),
+        } as any;
+      });
     } catch (error: any) {
       this.logger.error("Error fetching SOWs", error);
       throw error.status ? error : { status: 500, message: "Failed to fetch SOWs" };
     }
   }
-
-  // ─── GET SOW BY ID ───────────────────────────────────────────────────────────
 
   async getSowById(sowUId: string): Promise<ISow> {
     try {
@@ -5526,14 +5652,71 @@ class SowService {
         throw { status: 404, message: "SOW not found" };
       }
       this.logger.info(`Fetched SOW with UId: ${sowUId}`);
-      return this.mapToInterface(sow);
+
+      const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
+      const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
+      return {
+        id:                    sow.id,
+        sowUId:                sow.sowUId,
+        customerId:            sow.customerId,
+        title:                 sow.title,
+        totalValue:            sow.totalValue,
+        currency:              sow.currency,
+        validFrom:             sow.validFrom,
+        validUpto:             sow.validUpto,
+        customerPONumber:      sow.customerPONumber,
+        customerSONumber:      sow.customerSONumber,
+        invoiceEmailAddresses: sow.invoiceEmailAddresses,
+        SowPaymentPlans: plans.map((plan) => {
+          const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
+          return {
+            id:                 plan.id,
+            sowPaymentPlanUId:  plan.sowPaymentPlanUId,
+            plannedInvoiceDate: plan.plannedInvoiceDate,
+            totalActualAmount:  plan.totalActualAmount,
+            SowPaymentPlanLineItems: lineItems.map((li) => ({
+              id:                        li.id,
+              sowPaymentPlanLineItemUId: li.sowPaymentPlanLineItemUId,
+              orderId:                   li.orderId,
+              particular:                li.particular,
+              rate:                      li.rate,
+              unit:                      li.unit,
+              total:                     li.total,
+            })),
+          };
+        }),
+        Invoices: invoices.map((invoice) => {
+          const lineItems = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+          const payment   = (invoice as any).Payment as Payment | null;
+          return {
+            id:                invoice.id,
+            invoiceUId:        invoice.invoiceUId,
+            status:            invoice.status,
+            totalInvoiceValue: invoice.totalInvoiceValue,
+            invoiceAmount:     invoice.invoiceAmount,
+            paymentReceivedOn: invoice.paymentReceivedOn,
+            InvoiceLineItems: lineItems.map((li) => ({
+              id:                 li.id,
+              invoiceLineItemUId: li.invoiceLineItemUId,
+              orderNo:            li.orderNo,
+              particular:         li.particular,
+              rate:               li.rate,
+              unit:               li.unit,
+              total:              li.total,
+            })),
+            Payment: payment ? {
+              paymentDate:   payment.paymentDate,
+              isFullPayment: payment.isFullPayment,
+              bankPayment:   payment.bankPayment,
+            } : null,
+          };
+        }),
+      } as any;
     } catch (error: any) {
       this.logger.error(`Error fetching SOW with UId: ${sowUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch SOW" };
     }
   }
-
-  // ─── UPDATE SOW ──────────────────────────────────────────────────────────────
 
   // async updateSow(dto: UpdateSowDto): Promise<ISow> {
   //   try {
@@ -5544,30 +5727,43 @@ class SowService {
 
   //     await this.sowDbService.archiveSow(existing.id!);
 
-  //     const updated = new Sow();
-  //     updated.sowUId                = existing.sowUId;
-  //     updated.version               = existing.version + 1;
-  //     updated.archive               = false;
-  //     updated.customerId            = existing.customerId;
-  //     updated.title                 = dto.title                 ?? existing.title;
-  //     updated.totalValue            = dto.totalValue            ?? existing.totalValue;
-  //     updated.currency              = dto.currency              ?? existing.currency;
-  //     updated.validFrom             = dto.validFrom             ?? existing.validFrom;
-  //     updated.validUpto             = dto.validUpto             ?? existing.validUpto;
-  //     updated.customerPONumber      = dto.customerPONumber      ?? existing.customerPONumber;
-  //     updated.customerSONumber      = dto.customerSONumber      ?? existing.customerSONumber;
-  //     updated.invoiceEmailAddresses = dto.invoiceEmailAddresses ?? existing.invoiceEmailAddresses;
+  //     const updated                    = new Sow();
+  //     updated.sowUId                   = existing.sowUId;
+  //     updated.version                  = existing.version + 1;
+  //     updated.archive                  = false;
+  //     updated.customerId               = existing.customerId;
+  //     updated.title                    = dto.title                 ?? existing.title;
+  //     updated.totalValue               = dto.totalValue            ?? existing.totalValue;
+  //     updated.currency                 = dto.currency              ?? existing.currency;
+  //     updated.validFrom                = dto.validFrom             ?? existing.validFrom;
+  //     updated.validUpto                = dto.validUpto             ?? existing.validUpto;
+  //     updated.customerPONumber         = dto.customerPONumber      ?? existing.customerPONumber;
+  //     updated.customerSONumber         = dto.customerSONumber      ?? existing.customerSONumber;
+  //     updated.invoiceEmailAddresses    = dto.invoiceEmailAddresses ?? existing.invoiceEmailAddresses;
 
   //     const created = await this.sowDbService.createSow(updated);
   //     this.logger.info(`SOW updated with UId: ${dto.sowUId} version: ${created.version}`);
-  //     return this.mapToInterface(created);
+
+  //     return {
+  //       id:                    created.id,
+  //       sowUId:                created.sowUId,
+  //       customerId:            created.customerId,
+  //       title:                 created.title,
+  //       totalValue:            created.totalValue,
+  //       currency:              created.currency,
+  //       validFrom:             created.validFrom,
+  //       validUpto:             created.validUpto,
+  //       customerPONumber:      created.customerPONumber,
+  //       customerSONumber:      created.customerSONumber,
+  //       invoiceEmailAddresses: created.invoiceEmailAddresses,
+  //       SowPaymentPlans:       [],
+  //       Invoices:              [],
+  //     } as any;
   //   } catch (error: any) {
   //     this.logger.error("Error updating SOW", error);
   //     throw error.status ? error : { status: 500, message: "Failed to update SOW" };
   //   }
   // }
-
-  // // ─── DELETE SOW ──────────────────────────────────────────────────────────────
 
   // async deleteSow(sowUId: string): Promise<{ message: string }> {
   //   try {
@@ -5592,7 +5788,7 @@ export default SowService;
 const TYPES = {
   Logger: Symbol.for("Logger"),
 
-  // ─── DB SERVICES ──────────────────────────────────────────────────────────
+  // DB SERVICES
   OrganizationDbService:            Symbol.for("OrganizationDbService"),
   CustomerDbService:                Symbol.for("CustomerDbService"),
   SowDbService:                     Symbol.for("SowDbService"),
@@ -5602,7 +5798,7 @@ const TYPES = {
   InvoiceLineItemDbService:         Symbol.for("InvoiceLineItemDbService"),
   PaymentDbService:                 Symbol.for("PaymentDbService"),
 
-  // ─── SERVICES ─────────────────────────────────────────────────────────────
+  // SERVICES 
   OrganizationService:              Symbol.for("OrganizationService"),
   CustomerService:                  Symbol.for("CustomerService"),
   SowService:                       Symbol.for("SowService"),
@@ -5612,7 +5808,7 @@ const TYPES = {
   InvoiceLineItemService:           Symbol.for("InvoiceLineItemService"),
   PaymentService:                   Symbol.for("PaymentService"),
 
-  // ─── CONTROLLERS ──────────────────────────────────────────────────────────
+  //  CONTROLLERS 
   OrganizationController:           Symbol.for("OrganizationController"),
   CustomerController:               Symbol.for("CustomerController"),
   SowController:                    Symbol.for("SowController"),
@@ -5622,7 +5818,7 @@ const TYPES = {
   InvoiceLineItemController:        Symbol.for("InvoiceLineItemController"),
   PaymentController:                Symbol.for("PaymentController"),
 
-  // ─── ROUTES ───────────────────────────────────────────────────────────────
+  // ROUTES
   OrganizationRoutes:               Symbol.for("OrganizationRoutes"),
   CustomerRoutes:                   Symbol.for("CustomerRoutes"),
   SowRoutes:                        Symbol.for("SowRoutes"),

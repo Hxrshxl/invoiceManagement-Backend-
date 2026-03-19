@@ -5,7 +5,6 @@ import Customer from "../models/customerModel";
 import Sow from "../models/sowModel";
 import SowPaymentPlan from "../models/sowPaymentPlanModel";
 import { CreateOrganizationDto } from "../dto/createOrganizationDto";
-import { UpdateOrganizationDto } from "../dto/updateOrganizationDto";
 import { IOrganizationDbService } from "../postgresDB/pgInterface";
 import TYPES from "../types/inversifyTypes";
 import { IOrganization } from "../interfaces/organizationInterface";
@@ -65,43 +64,25 @@ class OrganizationService {
 
       return organizations.map((org) => {
         const customers = ((org as any).Customers as Customer[]) ?? [];
-        return {
-          id:                    org.id,
-          organizationUId:       org.organizationUId,
-          legalOrganizationName: org.legalOrganizationName,
-          contactName:           org.contactName,
-          displayName:           org.displayName,
-          email:                 org.email,
-          phone:                 org.phone,
-          Customers: customers.map((customer) => {
-            const sows = ((customer as any).Sows as Sow[]) ?? [];
+      return {
+        id:                    org.id,
+        organizationUId:       org.organizationUId,
+        legalOrganizationName: org.legalOrganizationName,
+        contactName:           org.contactName,
+        displayName:           org.displayName,
+        email:                 org.email,
+        phone:                 org.phone,
+        Customers: customers.map((customer) => {
+          const sows = ((customer as any).Sows as Sow[]) ?? [];
             return {
-              id:          customer.id,
-              customerUId: customer.customerUId,
-              legalName:   customer.legalName,
-              shortName:   customer.shortName,
-              displayName: customer.displayName,
-              Sows: sows.map((sow) => {
-                const plans = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
-                return {
-                  id:              sow.id,
-                  sowUId:          sow.sowUId,
-                  title:           sow.title,
-                  totalValue:      sow.totalValue,
-                  currency:        sow.currency,
-                  validFrom:       sow.validFrom,
-                  validUpto:       sow.validUpto,
-                  SowPaymentPlans: plans.map((plan) => ({
-                    id:                 plan.id,
-                    sowPaymentPlanUId:  plan.sowPaymentPlanUId,
-                    plannedInvoiceDate: plan.plannedInvoiceDate,
-                    totalActualAmount:  plan.totalActualAmount,
-                  })),
-                };
-              }),
+            id:          customer.id,
+            customerUId: customer.customerUId,
+            legalName:   customer.legalName,
+            shortName:   customer.shortName,
+            displayName: customer.displayName,
             };
-          }),
-        } as any;
+        }),
+      } as any;
       });
     } catch (error: any) {
       this.logger.error("Error fetching organizations", error);
@@ -126,31 +107,13 @@ class OrganizationService {
         phone:                 org.phone,
         Customers: customers.map((customer) => {
           const sows = ((customer as any).Sows as Sow[]) ?? [];
-          return {
+            return {
             id:          customer.id,
             customerUId: customer.customerUId,
             legalName:   customer.legalName,
             shortName:   customer.shortName,
             displayName: customer.displayName,
-            Sows: sows.map((sow) => {
-              const plans = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
-              return {
-                id:              sow.id,
-                sowUId:          sow.sowUId,
-                title:           sow.title,
-                totalValue:      sow.totalValue,
-                currency:        sow.currency,
-                validFrom:       sow.validFrom,
-                validUpto:       sow.validUpto,
-                SowPaymentPlans: plans.map((plan) => ({
-                  id:                 plan.id,
-                  sowPaymentPlanUId:  plan.sowPaymentPlanUId,
-                  plannedInvoiceDate: plan.plannedInvoiceDate,
-                  totalActualAmount:  plan.totalActualAmount,
-                })),
-              };
-            }),
-          };
+            };
         }),
       } as any;
     } catch (error: any) {
