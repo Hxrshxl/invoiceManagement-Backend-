@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec ts-node -r tsconfig-paths/register src/app.ts",
     "build": "tsc",
-    "start": "node dist/app.js"
+    "start": "node dist/app.js",
+    "dump:src": "node scripts/dump-src-to-txt.js"
   },
   "dependencies": {
     "class-transformer": "^0.5.1",
