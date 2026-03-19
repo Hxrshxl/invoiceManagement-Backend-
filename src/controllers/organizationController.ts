@@ -57,35 +57,35 @@ class OrganizationController {
     }
   }
 
-  async updateOrganizationHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { dto, errors } = await validateDto(UpdateOrganizationDto, req.body);
-      if (errors.length > 0) {
-        res.status(400).json({ success: false, message: "Validation failed", errors });
-        return;
-      }
-      const organization = await this.organizationService.updateOrganization(dto);
-      res.status(200).json({ success: true, message: "Organization updated successfully", data: organization });
-    } catch (error: any) {
-      this.logger.error("Error in updateOrganizationHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
+  // async updateOrganizationHandler(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const { dto, errors } = await validateDto(UpdateOrganizationDto, req.body);
+  //     if (errors.length > 0) {
+  //       res.status(400).json({ success: false, message: "Validation failed", errors });
+  //       return;
+  //     }
+  //     const organization = await this.organizationService.updateOrganization(dto);
+  //     res.status(200).json({ success: true, message: "Organization updated successfully", data: organization });
+  //   } catch (error: any) {
+  //     this.logger.error("Error in updateOrganizationHandler", error);
+  //     res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+  //   }
+  // }
 
-  async deleteOrganizationHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { organizationUId } = req.body;
-      if (!organizationUId) {
-        res.status(400).json({ success: false, message: "organizationUId is required" });
-        return;
-      }
-      const result = await this.organizationService.deleteOrganization(organizationUId);
-      res.status(200).json({ success: true, message: result.message });
-    } catch (error: any) {
-      this.logger.error("Error in deleteOrganizationHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
+  // async deleteOrganizationHandler(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const { organizationUId } = req.body;
+  //     if (!organizationUId) {
+  //       res.status(400).json({ success: false, message: "organizationUId is required" });
+  //       return;
+  //     }
+  //     const result = await this.organizationService.deleteOrganization(organizationUId);
+  //     res.status(200).json({ success: true, message: result.message });
+  //   } catch (error: any) {
+  //     this.logger.error("Error in deleteOrganizationHandler", error);
+  //     res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+  //   }
+  // }
 }
 
 export default OrganizationController;

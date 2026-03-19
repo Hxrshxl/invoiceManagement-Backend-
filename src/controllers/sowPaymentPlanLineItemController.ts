@@ -57,35 +57,35 @@ class SowPaymentPlanLineItemController {
     }
   }
 
-  async updateSowPaymentPlanLineItemHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { dto, errors } = await validateDto(UpdateSowPaymentPlanLineItemDto, req.body);
-      if (errors.length > 0) {
-        res.status(400).json({ success: false, message: "Validation failed", errors });
-        return;
-      }
-      const lineItem = await this.sowPaymentPlanLineItemService.updateSowPaymentPlanLineItem(dto);
-      res.status(200).json({ success: true, message: "SOW Payment Plan Line Item updated successfully", data: lineItem });
-    } catch (error: any) {
-      this.logger.error("Error in updateSowPaymentPlanLineItemHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
+  // async updateSowPaymentPlanLineItemHandler(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const { dto, errors } = await validateDto(UpdateSowPaymentPlanLineItemDto, req.body);
+  //     if (errors.length > 0) {
+  //       res.status(400).json({ success: false, message: "Validation failed", errors });
+  //       return;
+  //     }
+  //     const lineItem = await this.sowPaymentPlanLineItemService.updateSowPaymentPlanLineItem(dto);
+  //     res.status(200).json({ success: true, message: "SOW Payment Plan Line Item updated successfully", data: lineItem });
+  //   } catch (error: any) {
+  //     this.logger.error("Error in updateSowPaymentPlanLineItemHandler", error);
+  //     res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+  //   }
+  // }
 
-  async deleteSowPaymentPlanLineItemHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { sowPaymentPlanLineItemUId } = req.body;
-      if (!sowPaymentPlanLineItemUId) {
-        res.status(400).json({ success: false, message: "sowPaymentPlanLineItemUId is required" });
-        return;
-      }
-      const result = await this.sowPaymentPlanLineItemService.deleteSowPaymentPlanLineItem(sowPaymentPlanLineItemUId);
-      res.status(200).json({ success: true, message: result.message });
-    } catch (error: any) {
-      this.logger.error("Error in deleteSowPaymentPlanLineItemHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
+  // async deleteSowPaymentPlanLineItemHandler(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const { sowPaymentPlanLineItemUId } = req.body;
+  //     if (!sowPaymentPlanLineItemUId) {
+  //       res.status(400).json({ success: false, message: "sowPaymentPlanLineItemUId is required" });
+  //       return;
+  //     }
+  //     const result = await this.sowPaymentPlanLineItemService.deleteSowPaymentPlanLineItem(sowPaymentPlanLineItemUId);
+  //     res.status(200).json({ success: true, message: result.message });
+  //   } catch (error: any) {
+  //     this.logger.error("Error in deleteSowPaymentPlanLineItemHandler", error);
+  //     res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+  //   }
+  // }
 }
 
 export default SowPaymentPlanLineItemController;

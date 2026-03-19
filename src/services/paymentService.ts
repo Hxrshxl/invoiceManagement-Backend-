@@ -104,54 +104,6 @@ class PaymentService {
       throw error.status ? error : { status: 500, message: "Failed to fetch payment" };
     }
   }
-
-  async updatePayment(dto: UpdatePaymentDto): Promise<IPayment> {
-    try {
-      const existing = await this.paymentDbService.findPaymentByUId(dto.paymentUId);
-      if (!existing) {
-        throw { status: 404, message: "Payment not found" };
-      }
-
-      // Archive old version
-      await this.paymentDbService.archivePayment(existing.id!);
-
-      // Create new version with updated fields
-      const updated = new Payment();
-      updated.paymentUId    = existing.paymentUId;
-      updated.version       = existing.version + 1;
-      updated.archive       = false;
-      updated.invoiceId     = existing.invoiceId;
-      updated.paymentDate   = dto.paymentDate   ?? existing.paymentDate;
-      updated.forExAmount   = dto.forExAmount   ?? existing.forExAmount;
-      updated.currency      = dto.currency      ?? existing.currency;
-      updated.indianAmount  = dto.indianAmount  ?? existing.indianAmount;
-      updated.isFullPayment = dto.isFullPayment ?? existing.isFullPayment;
-      updated.bankPayment   = dto.bankPayment   ?? existing.bankPayment;
-      updated.details       = dto.details       ?? existing.details;
-
-      const created = await this.paymentDbService.createPayment(updated);
-      this.logger.info(`Payment updated with UId: ${dto.paymentUId} version: ${created.version}`);
-      return this.mapToInterface(created);
-    } catch (error: any) {
-      this.logger.error("Error updating payment", error);
-      throw error.status ? error : { status: 500, message: "Failed to update payment" };
-    }
-  }
-
-  async deletePayment(paymentUId: string): Promise<{ message: string }> {
-    try {
-      const existing = await this.paymentDbService.findPaymentByUId(paymentUId);
-      if (!existing) {
-        throw { status: 404, message: "Payment not found" };
-      }
-      await this.paymentDbService.archivePayment(existing.id!);
-      this.logger.info(`Payment deleted with UId: ${paymentUId}`);
-      return { message: "Payment deleted successfully" };
-    } catch (error: any) {
-      this.logger.error("Error deleting payment", error);
-      throw error.status ? error : { status: 500, message: "Failed to delete payment" };
-    }
-  }
 }
 
 export default PaymentService;

@@ -28,12 +28,12 @@ export class SowPaymentPlanRoutes {
     this.router.post("/getSowPaymentPlansBySowId", (req: Request, res: Response) =>
       this.controller.getSowPaymentPlansBySowIdHandler(req, res)
     );
-    this.router.post("/updateSowPaymentPlan", (req: Request, res: Response) =>
-      this.controller.updateSowPaymentPlanHandler(req, res)
-    );
-    this.router.post("/deleteSowPaymentPlan", (req: Request, res: Response) =>
-      this.controller.deleteSowPaymentPlanHandler(req, res)
-    );
+    // this.router.post("/updateSowPaymentPlan", (req: Request, res: Response) =>
+    //   this.controller.updateSowPaymentPlanHandler(req, res)
+    // );
+    // this.router.post("/deleteSowPaymentPlan", (req: Request, res: Response) =>
+    //   this.controller.deleteSowPaymentPlanHandler(req, res)
+    // );
     this.router.post("/getInvoiceSchedule", (req: Request, res: Response) =>
       this.controller.getInvoiceScheduleHandler(req, res)
     );

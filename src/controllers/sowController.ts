@@ -57,35 +57,35 @@ class SowController {
     }
   }
 
-  async updateSowHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { dto, errors } = await validateDto(UpdateSowDto, req.body);
-      if (errors.length > 0) {
-        res.status(400).json({ success: false, message: "Validation failed", errors });
-        return;
-      }
-      const sow = await this.sowService.updateSow(dto);
-      res.status(200).json({ success: true, message: "SOW updated successfully", data: sow });
-    } catch (error: any) {
-      this.logger.error("Error in updateSowHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
+  // async updateSowHandler(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const { dto, errors } = await validateDto(UpdateSowDto, req.body);
+  //     if (errors.length > 0) {
+  //       res.status(400).json({ success: false, message: "Validation failed", errors });
+  //       return;
+  //     }
+  //     const sow = await this.sowService.updateSow(dto);
+  //     res.status(200).json({ success: true, message: "SOW updated successfully", data: sow });
+  //   } catch (error: any) {
+  //     this.logger.error("Error in updateSowHandler", error);
+  //     res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+  //   }
+  // }
 
-  async deleteSowHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { sowUId } = req.body;
-      if (!sowUId) {
-        res.status(400).json({ success: false, message: "sowUId is required" });
-        return;
-      }
-      const result = await this.sowService.deleteSow(sowUId);
-      res.status(200).json({ success: true, message: result.message });
-    } catch (error: any) {
-      this.logger.error("Error in deleteSowHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
+  // async deleteSowHandler(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const { sowUId } = req.body;
+  //     if (!sowUId) {
+  //       res.status(400).json({ success: false, message: "sowUId is required" });
+  //       return;
+  //     }
+  //     const result = await this.sowService.deleteSow(sowUId);
+  //     res.status(200).json({ success: true, message: result.message });
+  //   } catch (error: any) {
+  //     this.logger.error("Error in deleteSowHandler", error);
+  //     res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+  //   }
+  // }
 }
 
 export default SowController;

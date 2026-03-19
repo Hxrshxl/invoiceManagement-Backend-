@@ -25,12 +25,12 @@ export class SowPaymentPlanLineItemRoutes {
     this.router.post("/getSowPaymentPlanLineItemsByPlanId", (req: Request, res: Response) =>
       this.controller.getSowPaymentPlanLineItemsByPlanIdHandler(req, res)
     );
-    this.router.post("/updateSowPaymentPlanLineItem", (req: Request, res: Response) =>
-      this.controller.updateSowPaymentPlanLineItemHandler(req, res)
-    );
-    this.router.post("/deleteSowPaymentPlanLineItem", (req: Request, res: Response) =>
-      this.controller.deleteSowPaymentPlanLineItemHandler(req, res)
-    );
+    // this.router.post("/updateSowPaymentPlanLineItem", (req: Request, res: Response) =>
+    //   this.controller.updateSowPaymentPlanLineItemHandler(req, res)
+    // );
+    // this.router.post("/deleteSowPaymentPlanLineItem", (req: Request, res: Response) =>
+    //   this.controller.deleteSowPaymentPlanLineItemHandler(req, res)
+    // );
   }
 
   getRouter(): Router {

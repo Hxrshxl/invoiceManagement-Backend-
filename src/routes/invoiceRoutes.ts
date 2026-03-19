@@ -31,12 +31,12 @@ export class InvoiceRoutes {
     this.router.post("/cancelInvoice", (req: Request, res: Response) =>
       this.controller.cancelInvoiceHandler(req, res)
     );
-    this.router.post("/updateInvoice", (req: Request, res: Response) =>
-      this.controller.updateInvoiceHandler(req, res)
-    );
-    this.router.post("/deleteInvoice", (req: Request, res: Response) =>
-      this.controller.deleteInvoiceHandler(req, res)
-    );
+    // this.router.post("/updateInvoice", (req: Request, res: Response) =>
+    //   this.controller.updateInvoiceHandler(req, res)
+    // );
+    // this.router.post("/deleteInvoice", (req: Request, res: Response) =>
+    //   this.controller.deleteInvoiceHandler(req, res)
+    // );
   }
 
   getRouter(): Router {

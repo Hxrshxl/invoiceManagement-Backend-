@@ -103,35 +103,35 @@ class InvoiceController {
     }
   }
 
-  async updateInvoiceHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { dto, errors } = await validateDto(UpdateInvoiceDto, req.body);
-      if (errors.length > 0) {
-        res.status(400).json({ success: false, message: "Validation failed", errors });
-        return;
-      }
-      const invoice = await this.invoiceService.updateInvoice(dto);
-      res.status(200).json({ success: true, message: "Invoice updated successfully", data: invoice });
-    } catch (error: any) {
-      this.logger.error("Error in updateInvoiceHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
+  // async updateInvoiceHandler(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const { dto, errors } = await validateDto(UpdateInvoiceDto, req.body);
+  //     if (errors.length > 0) {
+  //       res.status(400).json({ success: false, message: "Validation failed", errors });
+  //       return;
+  //     }
+  //     const invoice = await this.invoiceService.updateInvoice(dto);
+  //     res.status(200).json({ success: true, message: "Invoice updated successfully", data: invoice });
+  //   } catch (error: any) {
+  //     this.logger.error("Error in updateInvoiceHandler", error);
+  //     res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+  //   }
+  // }
 
-  async deleteInvoiceHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { invoiceUId } = req.body;
-      if (!invoiceUId) {
-        res.status(400).json({ success: false, message: "invoiceUId is required" });
-        return;
-      }
-      const result = await this.invoiceService.deleteInvoice(invoiceUId);
-      res.status(200).json({ success: true, message: result.message });
-    } catch (error: any) {
-      this.logger.error("Error in deleteInvoiceHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
+  // async deleteInvoiceHandler(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const { invoiceUId } = req.body;
+  //     if (!invoiceUId) {
+  //       res.status(400).json({ success: false, message: "invoiceUId is required" });
+  //       return;
+  //     }
+  //     const result = await this.invoiceService.deleteInvoice(invoiceUId);
+  //     res.status(200).json({ success: true, message: result.message });
+  //   } catch (error: any) {
+  //     this.logger.error("Error in deleteInvoiceHandler", error);
+  //     res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+  //   }
+  // }
 }
 
 export default InvoiceController;

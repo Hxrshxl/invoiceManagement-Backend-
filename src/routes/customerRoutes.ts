@@ -25,12 +25,6 @@ export class CustomerRoutes {
     this.router.post("/getCustomerById", (req: Request, res: Response) =>
       this.controller.getCustomerByIdHandler(req, res)
     );
-    this.router.post("/updateCustomer", (req: Request, res: Response) =>
-      this.controller.updateCustomerHandler(req, res)
-    );
-    this.router.post("/deleteCustomer", (req: Request, res: Response) =>
-      this.controller.deleteCustomerHandler(req, res)
-    );
   }
 
   getRouter(): Router {

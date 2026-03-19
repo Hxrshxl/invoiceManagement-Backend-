@@ -25,12 +25,12 @@ export class SowRoutes {
     this.router.post("/getSowById", (req: Request, res: Response) =>
       this.controller.getSowByIdHandler(req, res)
     );
-    this.router.post("/updateSow", (req: Request, res: Response) =>
-      this.controller.updateSowHandler(req, res)
-    );
-    this.router.post("/deleteSow", (req: Request, res: Response) =>
-      this.controller.deleteSowHandler(req, res)
-    );
+    // this.router.post("/updateSow", (req: Request, res: Response) =>
+    //   this.controller.updateSowHandler(req, res)
+    // );
+    // this.router.post("/deleteSow", (req: Request, res: Response) =>
+    //   this.controller.deleteSowHandler(req, res)
+    // );
   }
 
   getRouter(): Router {

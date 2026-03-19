@@ -3,6 +3,7 @@ import { Logger } from "winston";
 import TYPES from "../types/inversifyTypes";
 import Invoice from "../models/invoiceModel";
 import InvoiceLineItem from "../models/invoiceLineItemModel";
+import Payment from "../models/paymentModel";
 import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
 import { IInvoice } from "../interfaces/invoiceInterface";
 import { UpdateInvoiceDto } from "../dto/updateInvoiceDto";
@@ -29,6 +30,11 @@ class InvoiceService {
   ) {}
 
   private mapToInterface(invoice: Invoice): IInvoice {
+    const lineItems      = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+    const payment        = (invoice as any).Payment as Payment | null;
+    const customer       = (invoice as any).Customer as any | null;
+    const organization   = customer?.Organization ?? null;
+
     return {
       id:                invoice.id,
       invoiceUId:        invoice.invoiceUId,
@@ -47,7 +53,25 @@ class InvoiceService {
       paymentId:         invoice.paymentId,
       createdAt:         invoice.createdAt,
       updatedAt:         invoice.updatedAt,
-    };
+
+      organizationName:  organization?.legalOrganizationName ?? null,
+      customerName:      customer?.legalName                 ?? null,
+
+      InvoiceLineItems: lineItems.map((l) => ({
+        orderNo:    l.orderNo,
+        particular: l.particular,
+        rate:       l.rate,
+        unit:       l.unit,
+        total:      l.total,
+      })),
+
+      Payment: payment ? {
+        paymentDate:   payment.paymentDate,
+        isFullPayment: payment.isFullPayment,
+        bankPayment:   payment.bankPayment,
+      } : null,
+
+    } as any;
   }
 
   async generateInvoicesForToday(date?: string): Promise<{ invoices: IInvoice[], skipped: number }> {
@@ -203,10 +227,8 @@ class InvoiceService {
         throw { status: 404, message: "Invoice not found" };
       }
 
-      // Archive old version
       await this.invoiceDbService.archiveInvoice(existing.id!);
 
-      // Create new version with updated fields
       const updated = new Invoice();
       updated.invoiceUId        = existing.invoiceUId;
       updated.version           = existing.version + 1;
@@ -254,8 +276,9 @@ class InvoiceService {
         throw { status: 404, message: "Invoice not found" };
       }
 
-      const invoiceWithLineItems = await this.invoiceDbService.findInvoiceByIdWithLineItems(invoice.id!);
-      const lineItems = (invoiceWithLineItems as any).InvoiceLineItems as InvoiceLineItem[];
+      const lineItems      = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+      const customer       = (invoice as any).Customer as any | null;
+      const organization   = customer?.Organization ?? null;
 
       return new Promise((resolve, reject) => {
         const PDFDocument       = require("pdfkit");
@@ -275,15 +298,15 @@ class InvoiceService {
         doc.font("Helvetica-Bold").text("Invoice Details", { underline: true });
         doc.moveDown(0.5);
         doc.font("Helvetica");
-        doc.text(`Invoice UId     : ${invoice.invoiceUId}`);
-        doc.text(`SOW ID          : ${invoice.sowId}`);
-        doc.text(`Customer ID     : ${invoice.customerId}`);
-        doc.text(`Status          : ${invoice.status}`);
-        doc.text(`Invoice Amount  : $${invoice.invoiceAmount}`);
-        doc.text(`Tax Amount      : $${invoice.invoiceTaxAmount}`);
-        doc.text(`Total Value     : $${invoice.totalInvoiceValue}`);
-        doc.text(`Version No      : ${invoice.invoiceVersionNo}`);
-        doc.text(`Created At      : ${invoice.createdAt}`);
+        doc.text(`Invoice UId       : ${invoice.invoiceUId}`);
+        doc.text(`Organization      : ${organization?.legalOrganizationName ?? "N/A"}`);
+        doc.text(`Customer          : ${customer?.legalName ?? "N/A"}`);
+        doc.text(`Status            : ${invoice.status}`);
+        doc.text(`Invoice Amount    : $${invoice.invoiceAmount}`);
+        doc.text(`Tax Amount        : $${invoice.invoiceTaxAmount}`);
+        doc.text(`Total Value       : $${invoice.totalInvoiceValue}`);
+        doc.text(`Payment Received  : ${invoice.paymentReceivedOn ?? "N/A"}`);
+        doc.text(`Created At        : ${invoice.createdAt}`);
 
         doc.moveDown();
         doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();

@@ -25,12 +25,12 @@ export class OrganizationRoutes {
     this.router.post("/getOrganizationById", (req: Request, res: Response) =>
       this.controller.getOrganizationByIdHandler(req, res)
     );
-    this.router.post("/updateOrganization", (req: Request, res: Response) =>
-      this.controller.updateOrganizationHandler(req, res)
-    );
-    this.router.post("/deleteOrganization", (req: Request, res: Response) =>
-      this.controller.deleteOrganizationHandler(req, res)
-    );
+    // this.router.post("/updateOrganization", (req: Request, res: Response) =>
+    //   this.controller.updateOrganizationHandler(req, res)
+    // );
+    // this.router.post("/deleteOrganization", (req: Request, res: Response) =>
+    //   this.controller.deleteOrganizationHandler(req, res)
+    // );
   }
 
   getRouter(): Router {

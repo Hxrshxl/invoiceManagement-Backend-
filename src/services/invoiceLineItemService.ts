@@ -83,51 +83,51 @@ class InvoiceLineItemService {
     }
   }
 
-  async updateInvoiceLineItem(dto: UpdateInvoiceLineItemDto): Promise<IInvoiceLineItem> {
-    try {
-      const existing = await this.invoiceLineItemDbService.findInvoiceLineItemByUId(dto.invoiceLineItemUId);
-      if (!existing) {
-        throw { status: 404, message: "Invoice Line Item not found" };
-      }
+  // async updateInvoiceLineItem(dto: UpdateInvoiceLineItemDto): Promise<IInvoiceLineItem> {
+  //   try {
+  //     const existing = await this.invoiceLineItemDbService.findInvoiceLineItemByUId(dto.invoiceLineItemUId);
+  //     if (!existing) {
+  //       throw { status: 404, message: "Invoice Line Item not found" };
+  //     }
 
-      // Archive old version
-      await this.invoiceLineItemDbService.archiveInvoiceLineItem(existing.id!);
+  //     // Archive old version
+  //     await this.invoiceLineItemDbService.archiveInvoiceLineItem(existing.id!);
 
-      // Create new version with updated fields
-      const updated = new InvoiceLineItem();
-      updated.invoiceLineItemUId = existing.invoiceLineItemUId;
-      updated.version            = existing.version + 1;
-      updated.archive            = false;
-      updated.invoiceId          = existing.invoiceId;
-      updated.orderNo            = dto.orderNo    ?? existing.orderNo;
-      updated.particular         = dto.particular ?? existing.particular;
-      updated.rate               = dto.rate       ?? existing.rate;
-      updated.unit               = dto.unit       ?? existing.unit;
-      updated.total              = dto.total      ?? existing.total;
+  //     // Create new version with updated fields
+  //     const updated = new InvoiceLineItem();
+  //     updated.invoiceLineItemUId = existing.invoiceLineItemUId;
+  //     updated.version            = existing.version + 1;
+  //     updated.archive            = false;
+  //     updated.invoiceId          = existing.invoiceId;
+  //     updated.orderNo            = dto.orderNo    ?? existing.orderNo;
+  //     updated.particular         = dto.particular ?? existing.particular;
+  //     updated.rate               = dto.rate       ?? existing.rate;
+  //     updated.unit               = dto.unit       ?? existing.unit;
+  //     updated.total              = dto.total      ?? existing.total;
 
-      const created = await this.invoiceLineItemDbService.createInvoiceLineItem(updated);
-      this.logger.info(`Invoice Line Item updated with UId: ${dto.invoiceLineItemUId} version: ${created.version}`);
-      return this.mapToInterface(created);
-    } catch (error: any) {
-      this.logger.error("Error updating invoice line item", error);
-      throw error.status ? error : { status: 500, message: "Failed to update invoice line item" };
-    }
-  }
+  //     const created = await this.invoiceLineItemDbService.createInvoiceLineItem(updated);
+  //     this.logger.info(`Invoice Line Item updated with UId: ${dto.invoiceLineItemUId} version: ${created.version}`);
+  //     return this.mapToInterface(created);
+  //   } catch (error: any) {
+  //     this.logger.error("Error updating invoice line item", error);
+  //     throw error.status ? error : { status: 500, message: "Failed to update invoice line item" };
+  //   }
+  // }
 
-  async deleteInvoiceLineItem(invoiceLineItemUId: string): Promise<{ message: string }> {
-    try {
-      const existing = await this.invoiceLineItemDbService.findInvoiceLineItemByUId(invoiceLineItemUId);
-      if (!existing) {
-        throw { status: 404, message: "Invoice Line Item not found" };
-      }
-      await this.invoiceLineItemDbService.archiveInvoiceLineItem(existing.id!);
-      this.logger.info(`Invoice Line Item deleted with UId: ${invoiceLineItemUId}`);
-      return { message: "Invoice Line Item deleted successfully" };
-    } catch (error: any) {
-      this.logger.error("Error deleting invoice line item", error);
-      throw error.status ? error : { status: 500, message: "Failed to delete invoice line item" };
-    }
-  }
+  // async deleteInvoiceLineItem(invoiceLineItemUId: string): Promise<{ message: string }> {
+  //   try {
+  //     const existing = await this.invoiceLineItemDbService.findInvoiceLineItemByUId(invoiceLineItemUId);
+  //     if (!existing) {
+  //       throw { status: 404, message: "Invoice Line Item not found" };
+  //     }
+  //     await this.invoiceLineItemDbService.archiveInvoiceLineItem(existing.id!);
+  //     this.logger.info(`Invoice Line Item deleted with UId: ${invoiceLineItemUId}`);
+  //     return { message: "Invoice Line Item deleted successfully" };
+  //   } catch (error: any) {
+  //     this.logger.error("Error deleting invoice line item", error);
+  //     throw error.status ? error : { status: 500, message: "Failed to delete invoice line item" };
+  //   }
+  // }
 }
 
 export default InvoiceLineItemService;

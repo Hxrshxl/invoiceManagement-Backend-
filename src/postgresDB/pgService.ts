@@ -1,5 +1,4 @@
 import { injectable } from "inversify";
-import { fn, col, where } from "sequelize";
 import Organization from "../models/organizationModel";
 import Customer from "../models/customerModel";
 import Sow from "../models/sowModel";
@@ -31,6 +30,13 @@ export class OrganizationDbService implements IOrganizationDbService {
   async findAllOrganizations(): Promise<Organization[]> {
     return await Organization.findAll({
       where: { archive: false },
+      include: [
+        {
+          model: Customer,
+          where: { archive: false },
+          required: false,
+        },
+      ],
     });
   }
 
@@ -43,6 +49,13 @@ export class OrganizationDbService implements IOrganizationDbService {
   async findOrganizationByUId(organizationUId: string): Promise<Organization | null> {
     return await Organization.findOne({
       where: { organizationUId, archive: false },
+      include: [
+        {
+          model: Customer,
+          where: { archive: false },
+          required: false,
+        },
+      ],
     });
   }
 
@@ -72,9 +85,50 @@ export class CustomerDbService implements ICustomerDbService {
   }
 
   async findAllCustomers(): Promise<Customer[]> {
-    return await Customer.findAll({
+    const customers = await Customer.findAll({
       where: { archive: false },
     });
+
+    const enriched = await Promise.all(
+      customers.map(async (customer) => {
+        const allVersions = await Customer.findAll({
+          where: { customerUId: customer.customerUId },
+          attributes: ["id"],
+        });
+        const allCustomerIds = allVersions.map((v) => v.id);
+
+        const sows = await Sow.findAll({
+          where: { customerId: allCustomerIds, archive: false },
+        });
+
+        const enrichedSows = await Promise.all(
+          sows.map(async (sow) => {
+            const allSowVersions = await Sow.findAll({
+              where: { sowUId: sow.sowUId },
+              attributes: ["id"],
+            });
+            const allSowIds = allSowVersions.map((v) => v.id);
+
+            const sowPaymentPlans = await SowPaymentPlan.findAll({
+              where: { sowId: allSowIds, archive: false },
+            });
+
+            const invoices = await Invoice.findAll({
+              where: { sowId: allSowIds, archive: false },
+            });
+
+            (sow as any).SowPaymentPlans = sowPaymentPlans;
+            (sow as any).Invoices        = invoices;
+            return sow;
+          })
+        );
+
+        (customer as any).Sows = enrichedSows;
+        return customer;
+      })
+    );
+
+    return enriched;
   }
 
   async findCustomerById(id: string): Promise<Customer | null> {
@@ -84,9 +138,45 @@ export class CustomerDbService implements ICustomerDbService {
   }
 
   async findCustomerByUId(customerUId: string): Promise<Customer | null> {
-    return await Customer.findOne({
+    const customer = await Customer.findOne({
       where: { customerUId, archive: false },
     });
+    if (!customer) return null;
+
+    const allVersions = await Customer.findAll({
+      where: { customerUId },
+      attributes: ["id"],
+    });
+    const allCustomerIds = allVersions.map((v) => v.id);
+
+    const sows = await Sow.findAll({
+      where: { customerId: allCustomerIds, archive: false },
+    });
+
+    const enrichedSows = await Promise.all(
+      sows.map(async (sow) => {
+        const allSowVersions = await Sow.findAll({
+          where: { sowUId: sow.sowUId },
+          attributes: ["id"],
+        });
+        const allSowIds = allSowVersions.map((v) => v.id);
+
+        const sowPaymentPlans = await SowPaymentPlan.findAll({
+          where: { sowId: allSowIds, archive: false },
+        });
+
+        const invoices = await Invoice.findAll({
+          where: { sowId: allSowIds, archive: false },
+        });
+
+        (sow as any).SowPaymentPlans = sowPaymentPlans;
+        (sow as any).Invoices        = invoices;
+        return sow;
+      })
+    );
+
+    (customer as any).Sows = enrichedSows;
+    return customer;
   }
 
   async findCustomerByLegalName(legalName: string): Promise<Customer | null> {
@@ -121,9 +211,50 @@ export class SowDbService implements ISowDbService {
   }
 
   async findAllSows(): Promise<Sow[]> {
-    return await Sow.findAll({
+    const sows = await Sow.findAll({
       where: { archive: false },
     });
+
+    const enriched = await Promise.all(
+      sows.map(async (sow) => {
+        const allVersions = await Sow.findAll({
+          where: { sowUId: sow.sowUId },
+          attributes: ["id"],
+        });
+        const allSowIds = allVersions.map((v) => v.id);
+
+        const plans = await SowPaymentPlan.findAll({
+          where: { sowId: allSowIds, archive: false },
+          include: [
+            {
+              model: SowPaymentPlanLineItem,
+              as: "SowPaymentPlanLineItems",
+              where: { archive: false },
+              required: false,
+            },
+          ],
+        });
+
+        const invoices = await Invoice.findAll({
+          where: { sowId: allSowIds, archive: false },
+          include: [
+            {
+              model: InvoiceLineItem,
+              as: "InvoiceLineItems",
+              where: { archive: false },
+              required: false,
+            },
+            { model: Payment, required: false },
+          ],
+        });
+
+        (sow as any).SowPaymentPlans = plans;
+        (sow as any).Invoices        = invoices;
+        return sow;
+      })
+    );
+
+    return enriched;
   }
 
   async findSowById(id: string): Promise<Sow | null> {
@@ -133,9 +264,45 @@ export class SowDbService implements ISowDbService {
   }
 
   async findSowByUId(sowUId: string): Promise<Sow | null> {
-    return await Sow.findOne({
+    const sow = await Sow.findOne({
       where: { sowUId, archive: false },
     });
+    if (!sow) return null;
+
+    const allVersions = await Sow.findAll({
+      where: { sowUId },
+      attributes: ["id"],
+    });
+    const allSowIds = allVersions.map((v) => v.id);
+
+    const plans = await SowPaymentPlan.findAll({
+      where: { sowId: allSowIds, archive: false },
+      include: [
+        {
+          model: SowPaymentPlanLineItem,
+          as: "SowPaymentPlanLineItems",
+          where: { archive: false },
+          required: false,
+        },
+      ],
+    });
+
+    const invoices = await Invoice.findAll({
+      where: { sowId: allSowIds, archive: false },
+      include: [
+        {
+          model: InvoiceLineItem,
+          as: "InvoiceLineItems",
+          where: { archive: false },
+          required: false,
+        },
+        { model: Payment, required: false },
+      ],
+    });
+
+    (sow as any).SowPaymentPlans = plans;
+    (sow as any).Invoices        = invoices;
+    return sow;
   }
 
   async findSowByPONumber(customerPONumber: string): Promise<Sow | null> {
@@ -172,6 +339,39 @@ export class SowPaymentPlanDbService implements ISowPaymentPlanDbService {
   async findAllSowPaymentPlans(): Promise<SowPaymentPlan[]> {
     return await SowPaymentPlan.findAll({
       where: { archive: false },
+      include: [
+        {
+          model: SowPaymentPlanLineItem,
+          as: "SowPaymentPlanLineItems",
+          where: { archive: false },
+          required: false,
+        },
+        {
+          model: Invoice,
+          as: "Invoices",
+          where: { archive: false },
+          required: false,
+          include: [
+            {
+              model: InvoiceLineItem,
+              as: "InvoiceLineItems",
+              where: { archive: false },
+              required: false,
+            },
+            { model: Payment, required: false },
+          ],
+        },
+        {
+          model: Customer,
+          where: { archive: false },
+          required: false,
+        },
+        {
+          model: Sow,
+          where: { archive: false },
+          required: false,
+        },
+      ],
     });
   }
 
@@ -184,33 +384,94 @@ export class SowPaymentPlanDbService implements ISowPaymentPlanDbService {
   async findSowPaymentPlanByUId(sowPaymentPlanUId: string): Promise<SowPaymentPlan | null> {
     return await SowPaymentPlan.findOne({
       where: { sowPaymentPlanUId, archive: false },
+      include: [
+        {
+          model: SowPaymentPlanLineItem,
+          as: "SowPaymentPlanLineItems",
+          where: { archive: false },
+          required: false,
+        },
+        {
+          model: Invoice,
+          as: "Invoices",
+          where: { archive: false },
+          required: false,
+          include: [
+            {
+              model: InvoiceLineItem,
+              as: "InvoiceLineItems",
+              where: { archive: false },
+              required: false,
+            },
+            { model: Payment, required: false },
+          ],
+        },
+        {
+          model: Customer,
+          where: { archive: false },
+          required: false,
+        },
+        {
+          model: Sow,
+          where: { archive: false },
+          required: false,
+        },
+      ],
     });
   }
 
   async findSowPaymentPlansBySowId(sowId: string): Promise<SowPaymentPlan[]> {
     return await SowPaymentPlan.findAll({
       where: { sowId, archive: false },
+      include: [
+        {
+          model: SowPaymentPlanLineItem,
+          as: "SowPaymentPlanLineItems",
+          where: { archive: false },
+          required: false,
+        },
+        {
+          model: Invoice,
+          as: "Invoices",
+          where: { archive: false },
+          required: false,
+          include: [
+            {
+              model: InvoiceLineItem,
+              as: "InvoiceLineItems",
+              where: { archive: false },
+              required: false,
+            },
+            { model: Payment, required: false },
+          ],
+        },
+        {
+          model: Customer,
+          where: { archive: false },
+          required: false,
+        },
+        {
+          model: Sow,
+          where: { archive: false },
+          required: false,
+        },
+      ],
     });
   }
 
-async findSowPaymentPlansByDate(date: string): Promise<SowPaymentPlan[]> {
-  const { Op } = require("sequelize");
-
-  return await SowPaymentPlan.findAll({
-    where: {
-      plannedInvoiceDate: date,
-      archive: false,
-    },
-    include: [
-      {
-        model: SowPaymentPlanLineItem,
-        as: "SowPaymentPlanLineItems",
-        where: { archive: false },
-        required: false,
-      },
-    ],
-  });
-}
+  async findSowPaymentPlansByDate(date: string): Promise<SowPaymentPlan[]> {
+    return await SowPaymentPlan.findAll({
+      where: { plannedInvoiceDate: date, archive: false },
+      include: [
+        {
+          model: SowPaymentPlanLineItem,
+          as: "SowPaymentPlanLineItems",
+          where: { archive: false },
+          required: false,
+        },
+      ],
+    });
+  }
 
   async findSowPaymentPlansWithInvoices(): Promise<SowPaymentPlan[]> {
     return await SowPaymentPlan.findAll({
@@ -255,6 +516,18 @@ export class SowPaymentPlanLineItemDbService implements ISowPaymentPlanLineItemD
   async findAllSowPaymentPlanLineItems(): Promise<SowPaymentPlanLineItem[]> {
     return await SowPaymentPlanLineItem.findAll({
       where: { archive: false },
+      include: [
+        {
+          model: SowPaymentPlan,
+          where: { archive: false },
+          required: false,
+        },
+        {
+          model: Sow,
+          where: { archive: false },
+          required: false,
+        },
+      ],
     });
   }
 
@@ -267,6 +540,18 @@ export class SowPaymentPlanLineItemDbService implements ISowPaymentPlanLineItemD
   async findSowPaymentPlanLineItemsByPlanId(sowPaymentPlanId: string): Promise<SowPaymentPlanLineItem[]> {
     return await SowPaymentPlanLineItem.findAll({
       where: { sowPaymentPlanId, archive: false },
+      include: [
+        {
+          model: SowPaymentPlan,
+          where: { archive: false },
+          required: false,
+        },
+        {
+          model: Sow,
+          where: { archive: false },
+          required: false,
+        },
+      ],
     });
   }
 
@@ -292,6 +577,28 @@ export class InvoiceDbService implements IInvoiceDbService {
   async findAllInvoices(): Promise<Invoice[]> {
     return await Invoice.findAll({
       where: { archive: false },
+      include: [
+        {
+          model: InvoiceLineItem,
+          as: "InvoiceLineItems",
+          where: { archive: false },
+          required: false,
+        },
+        { model: Payment, required: false },
+        {
+          model: Customer,
+          where: { archive: false },
+          required: false,
+          include: [
+            {
+              model: Organization,
+              where: { archive: false },
+              required: false,
+            },
+          ],
+        },
+        { model: Sow, where: { archive: false }, required: false },
+      ],
     });
   }
 
@@ -304,6 +611,28 @@ export class InvoiceDbService implements IInvoiceDbService {
   async findInvoiceByUId(invoiceUId: string): Promise<Invoice | null> {
     return await Invoice.findOne({
       where: { invoiceUId, archive: false },
+      include: [
+        {
+          model: InvoiceLineItem,
+          as: "InvoiceLineItems",
+          where: { archive: false },
+          required: false,
+        },
+        { model: Payment, required: false },
+        {
+          model: Customer,
+          where: { archive: false },
+          required: false,
+          include: [
+            {
+              model: Organization,
+              where: { archive: false },
+              required: false,
+            },
+          ],
+        },
+        { model: Sow, where: { archive: false }, required: false },
+      ],
     });
   }
 
@@ -317,6 +646,20 @@ export class InvoiceDbService implements IInvoiceDbService {
           where: { archive: false },
           required: false,
         },
+        { model: Payment, required: false },
+        {
+          model: Customer,
+          where: { archive: false },
+          required: false,
+          include: [
+            {
+              model: Organization,
+              where: { archive: false },
+              required: false,
+            },
+          ],
+        },
+        { model: Sow, where: { archive: false }, required: false },
       ],
     });
   }
@@ -417,17 +760,3 @@ export class PaymentDbService implements IPaymentDbService {
     return await payment.save();
   }
 }
-
-export const connectDatabase = async (): Promise<void> => {
-  const sequelize = require("./pgConfig").default;
-  const logger    = require("../config/logger").default;
-  try {
-    await sequelize.authenticate();
-    logger.info("Database connection established successfully");
-    await sequelize.sync({ alter: true });
-    logger.info("Database synced successfully");
-  } catch (error) {
-    logger.error("Unable to connect to the database", error);
-    process.exit(1);
-  }
-};

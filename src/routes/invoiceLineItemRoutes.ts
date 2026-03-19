@@ -22,12 +22,12 @@ export class InvoiceLineItemRoutes {
     this.router.post("/getInvoiceLineItemsByInvoiceId", (req: Request, res: Response) =>
       this.controller.getInvoiceLineItemsByInvoiceIdHandler(req, res)
     );
-    this.router.post("/updateInvoiceLineItem", (req: Request, res: Response) =>
-      this.controller.updateInvoiceLineItemHandler(req, res)
-    );
-    this.router.post("/deleteInvoiceLineItem", (req: Request, res: Response) =>
-      this.controller.deleteInvoiceLineItemHandler(req, res)
-    );
+    // this.router.post("/updateInvoiceLineItem", (req: Request, res: Response) =>
+    //   this.controller.updateInvoiceLineItemHandler(req, res)
+    // );
+    // this.router.post("/deleteInvoiceLineItem", (req: Request, res: Response) =>
+    //   this.controller.deleteInvoiceLineItemHandler(req, res)
+    // );
   }
 
   getRouter(): Router {

@@ -47,35 +47,35 @@ class InvoiceLineItemController {
     }
   }
 
-  async updateInvoiceLineItemHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { dto, errors } = await validateDto(UpdateInvoiceLineItemDto, req.body);
-      if (errors.length > 0) {
-        res.status(400).json({ success: false, message: "Validation failed", errors });
-        return;
-      }
-      const lineItem = await this.invoiceLineItemService.updateInvoiceLineItem(dto);
-      res.status(200).json({ success: true, message: "Invoice Line Item updated successfully", data: lineItem });
-    } catch (error: any) {
-      this.logger.error("Error in updateInvoiceLineItemHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
+  // async updateInvoiceLineItemHandler(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const { dto, errors } = await validateDto(UpdateInvoiceLineItemDto, req.body);
+  //     if (errors.length > 0) {
+  //       res.status(400).json({ success: false, message: "Validation failed", errors });
+  //       return;
+  //     }
+  //     const lineItem = await this.invoiceLineItemService.updateInvoiceLineItem(dto);
+  //     res.status(200).json({ success: true, message: "Invoice Line Item updated successfully", data: lineItem });
+  //   } catch (error: any) {
+  //     this.logger.error("Error in updateInvoiceLineItemHandler", error);
+  //     res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+  //   }
+  // }
 
-  async deleteInvoiceLineItemHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { invoiceLineItemUId } = req.body;
-      if (!invoiceLineItemUId) {
-        res.status(400).json({ success: false, message: "invoiceLineItemUId is required" });
-        return;
-      }
-      const result = await this.invoiceLineItemService.deleteInvoiceLineItem(invoiceLineItemUId);
-      res.status(200).json({ success: true, message: result.message });
-    } catch (error: any) {
-      this.logger.error("Error in deleteInvoiceLineItemHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
+  // async deleteInvoiceLineItemHandler(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const { invoiceLineItemUId } = req.body;
+  //     if (!invoiceLineItemUId) {
+  //       res.status(400).json({ success: false, message: "invoiceLineItemUId is required" });
+  //       return;
+  //     }
+  //     const result = await this.invoiceLineItemService.deleteInvoiceLineItem(invoiceLineItemUId);
+  //     res.status(200).json({ success: true, message: result.message });
+  //   } catch (error: any) {
+  //     this.logger.error("Error in deleteInvoiceLineItemHandler", error);
+  //     res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+  //   }
+  // }
 }
 
 export default InvoiceLineItemController;
