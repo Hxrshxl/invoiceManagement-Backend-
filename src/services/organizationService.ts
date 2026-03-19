@@ -75,8 +75,6 @@ class OrganizationService {
         Customers: customers.map((customer) => {
           const sows = ((customer as any).Sows as Sow[]) ?? [];
             return {
-            id:          customer.id,
-            customerUId: customer.customerUId,
             legalName:   customer.legalName,
             shortName:   customer.shortName,
             displayName: customer.displayName,
@@ -108,8 +106,6 @@ class OrganizationService {
         Customers: customers.map((customer) => {
           const sows = ((customer as any).Sows as Sow[]) ?? [];
             return {
-            id:          customer.id,
-            customerUId: customer.customerUId,
             legalName:   customer.legalName,
             shortName:   customer.shortName,
             displayName: customer.displayName,

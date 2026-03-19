@@ -7,7 +7,7 @@ import SowPaymentPlan from "../models/sowPaymentPlanModel";
 import Invoice from "../models/invoiceModel";
 import { CreateCustomerDto } from "../dto/createCustomerDto";
 import { UpdateCustomerDto } from "../dto/updateCustomerDto";
-import { ICustomerDbService } from "../postgresDB/pgInterface";
+import { ICustomerDbService, IOrganizationDbService } from "../postgresDB/pgInterface";
 import { ICustomer } from "../interfaces/customerInterface";
 
 @injectable()
@@ -16,19 +16,28 @@ class CustomerService {
     @inject(TYPES.CustomerDbService)
     private readonly customerDbService: ICustomerDbService,
 
+    @inject(TYPES.OrganizationDbService)
+    private readonly organizationDbService: IOrganizationDbService,
+
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
 
   async createCustomer(dto: CreateCustomerDto): Promise<ICustomer> {
     try {
+      // ─── Resolve organizationUId → internal id ────────────────────────────
+      const organization = await this.organizationDbService.findOrganizationByUId(dto.organizationUId);
+      if (!organization) {
+        throw { status: 404, message: "Organization not found" };
+      }
+
       const existing = await this.customerDbService.findCustomerByLegalName(dto.legalName);
       if (existing) {
         throw { status: 409, message: "Customer with this legal name already exists" };
       }
 
       const customer          = new Customer();
-      customer.organizationId = dto.organizationId;
+      customer.organizationId = organization.id;        // resolved internal id
       customer.legalName      = dto.legalName;
       customer.shortName      = dto.shortName;
       customer.displayName    = dto.displayName;
@@ -80,22 +89,13 @@ class CustomerService {
             const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
             const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
             return {
-              id:          sow.id,
-              sowUId:      sow.sowUId,
               title:       sow.title,
               totalValue:  sow.totalValue,
-              currency:    sow.currency,
-              validFrom:   sow.validFrom,
-              validUpto:   sow.validUpto,
               SowPaymentPlans: plans.map((plan) => ({
-                id:                 plan.id,
-                sowPaymentPlanUId:  plan.sowPaymentPlanUId,
                 plannedInvoiceDate: plan.plannedInvoiceDate,
                 totalActualAmount:  plan.totalActualAmount,
               })),
               Invoices: invoices.map((invoice) => ({
-                id:                invoice.id,
-                invoiceUId:        invoice.invoiceUId,
                 status:            invoice.status,
                 totalInvoiceValue: invoice.totalInvoiceValue,
                 invoiceAmount:     invoice.invoiceAmount,
@@ -131,22 +131,13 @@ class CustomerService {
           const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
           const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
           return {
-            id:          sow.id,
-            sowUId:      sow.sowUId,
             title:       sow.title,
             totalValue:  sow.totalValue,
-            currency:    sow.currency,
-            validFrom:   sow.validFrom,
-            validUpto:   sow.validUpto,
             SowPaymentPlans: plans.map((plan) => ({
-              id:                 plan.id,
-              sowPaymentPlanUId:  plan.sowPaymentPlanUId,
               plannedInvoiceDate: plan.plannedInvoiceDate,
               totalActualAmount:  plan.totalActualAmount,
             })),
             Invoices: invoices.map((invoice) => ({
-              id:                invoice.id,
-              invoiceUId:        invoice.invoiceUId,
               status:            invoice.status,
               totalInvoiceValue: invoice.totalInvoiceValue,
               invoiceAmount:     invoice.invoiceAmount,
@@ -160,66 +151,6 @@ class CustomerService {
       throw error.status ? error : { status: 500, message: "Failed to fetch customer" };
     }
   }
-
-  // async updateCustomer(dto: UpdateCustomerDto): Promise<ICustomer> {
-  //   try {
-  //     const existing = await this.customerDbService.findCustomerByUId(dto.customerUId);
-  //     if (!existing) {
-  //       throw { status: 404, message: "Customer not found" };
-  //     }
-
-  //     await this.customerDbService.archiveCustomer(existing.id!);
-
-  //     const updated          = new Customer();
-  //     updated.customerUId    = existing.customerUId;
-  //     updated.version        = existing.version + 1;
-  //     updated.archive        = false;
-  //     updated.organizationId = existing.organizationId;
-  //     updated.legalName      = dto.legalName    ?? existing.legalName;
-  //     updated.shortName      = dto.shortName    ?? existing.shortName;
-  //     updated.displayName    = dto.displayName  ?? existing.displayName;
-  //     updated.addressId      = dto.addressId    ?? existing.addressId;
-  //     updated.isMSASigned    = dto.isMSASigned  ?? existing.isMSASigned;
-  //     updated.msaSignedOn    = dto.msaSignedOn  ?? existing.msaSignedOn;
-  //     updated.msaValidFrom   = dto.msaValidFrom ?? existing.msaValidFrom;
-  //     updated.msaValidUpto   = dto.msaValidUpto ?? existing.msaValidUpto;
-  //     updated.isNDASigned    = dto.isNDASigned  ?? existing.isNDASigned;
-  //     updated.ndaSignedOn    = dto.ndaSignedOn  ?? existing.ndaSignedOn;
-  //     updated.ndaValidFrom   = dto.ndaValidFrom ?? existing.ndaValidFrom;
-  //     updated.ndaValidUpto   = dto.ndaValidUpto ?? existing.ndaValidUpto;
-
-  //     const created = await this.customerDbService.createCustomer(updated);
-  //     this.logger.info(`Customer updated with UId: ${dto.customerUId} version: ${created.version}`);
-
-  //     return {
-  //       id:             created.id,
-  //       customerUId:    created.customerUId,
-  //       organizationId: created.organizationId,
-  //       legalName:      created.legalName,
-  //       shortName:      created.shortName,
-  //       displayName:    created.displayName,
-  //       Sows:           [],
-  //     } as any;
-  //   } catch (error: any) {
-  //     this.logger.error("Error updating customer", error);
-  //     throw error.status ? error : { status: 500, message: "Failed to update customer" };
-  //   }
-  // }
-
-  // async deleteCustomer(customerUId: string): Promise<{ message: string }> {
-  //   try {
-  //     const existing = await this.customerDbService.findCustomerByUId(customerUId);
-  //     if (!existing) {
-  //       throw { status: 404, message: "Customer not found" };
-  //     }
-  //     await this.customerDbService.archiveCustomer(existing.id!);
-  //     this.logger.info(`Customer deleted with UId: ${customerUId}`);
-  //     return { message: "Customer deleted successfully" };
-  //   } catch (error: any) {
-  //     this.logger.error("Error deleting customer", error);
-  //     throw error.status ? error : { status: 500, message: "Failed to delete customer" };
-  //   }
-  // }
 }
 
 export default CustomerService;

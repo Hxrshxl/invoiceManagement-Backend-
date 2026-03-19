@@ -3,7 +3,7 @@ import { IsString, IsNotEmpty, IsNumber, IsDateString, IsArray } from "class-val
 export class CreateSowDto {
   @IsString()
   @IsNotEmpty()
-  customerId: string;
+  customerUId: string;
 
   @IsString()
   @IsNotEmpty()

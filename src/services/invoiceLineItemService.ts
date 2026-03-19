@@ -20,30 +20,28 @@ class InvoiceLineItemService {
     private readonly logger: Logger
   ) {}
 
-  async createInvoiceLineItem(dto: CreateInvoiceLineItemDto): Promise<IInvoiceLineItem> {
-    try {
-      const existingInvoice = await this.invoiceDbService.findInvoiceById(dto.invoiceId);
-      if (!existingInvoice) {
-        throw { status: 404, message: "Invoice not found" };
-      }
+ async createInvoiceLineItem(dto: CreateInvoiceLineItemDto): Promise<IInvoiceLineItem> {
+  try {
+    const existingInvoice = await this.invoiceDbService.findInvoiceByUId(dto.invoiceUId); // ✅ findByUId
+    if (!existingInvoice) {
+      throw { status: 404, message: "Invoice not found" };
+    }
 
-      const invoiceLineItem            = new InvoiceLineItem();
-      invoiceLineItem.invoiceId        = dto.invoiceId;
-      invoiceLineItem.orderNo          = dto.orderNo;
-      invoiceLineItem.particular       = dto.particular;
-      invoiceLineItem.rate             = dto.rate;
-      invoiceLineItem.unit             = dto.unit;
-      invoiceLineItem.total            = dto.total;
-      invoiceLineItem.version          = 1;
-      invoiceLineItem.archive          = false;
+    const invoiceLineItem            = new InvoiceLineItem();
+    invoiceLineItem.invoiceId        = existingInvoice.id;  // ✅ use resolved .id internally
+    invoiceLineItem.orderNo          = dto.orderNo;
+    invoiceLineItem.particular       = dto.particular;
+    invoiceLineItem.rate             = dto.rate;
+    invoiceLineItem.unit             = dto.unit;
+    invoiceLineItem.total            = dto.total;
+    invoiceLineItem.version          = 1;
+    invoiceLineItem.archive          = false;
 
       const created = await this.invoiceLineItemDbService.createInvoiceLineItem(invoiceLineItem);
       this.logger.info(`Invoice Line Item created with id: ${created.id}`);
 
       return {
-        id:                 created.id,
         invoiceLineItemUId: created.invoiceLineItemUId,
-        invoiceId:          created.invoiceId,
         orderNo:            created.orderNo,
         particular:         created.particular,
         rate:               created.rate,
@@ -71,9 +69,7 @@ class InvoiceLineItemService {
       this.logger.info(`Fetched ${lineItems.length} line items for invoiceId: ${invoiceId}`);
 
       return lineItems.map((lineItem) => ({
-        id:                 lineItem.id,
         invoiceLineItemUId: lineItem.invoiceLineItemUId,
-        invoiceId:          lineItem.invoiceId,
         orderNo:            lineItem.orderNo,
         particular:         lineItem.particular,
         rate:               lineItem.rate,

@@ -1,10 +1,9 @@
 import { IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class CreateInvoiceLineItemDto {
-
   @IsString()
   @IsNotEmpty()
-  invoiceId: string;
+  invoiceUId: string;
 
   @IsString()
   @IsNotEmpty()

@@ -129,7 +129,6 @@ class InvoiceService {
         const organization = customer ? (customer as any).Organization as Organization | null : null;
 
         return {
-          id:                invoice.id,
           invoiceUId:        invoice.invoiceUId,
           status:            invoice.status,
           totalInvoiceValue: invoice.totalInvoiceValue,
@@ -171,7 +170,6 @@ class InvoiceService {
       const organization = customer ? (customer as any).Organization as Organization | null : null;
 
       return {
-        id:                invoice.id,
         invoiceUId:        invoice.invoiceUId,
         status:            invoice.status,
         totalInvoiceValue: invoice.totalInvoiceValue,
@@ -350,7 +348,6 @@ class InvoiceService {
         doc.font("Helvetica-Bold").text("Invoice Details", { underline: true });
         doc.moveDown(0.5);
         doc.font("Helvetica");
-        doc.text(`Invoice UId      : ${invoice.invoiceUId}`);
         doc.text(`Organization     : ${organization?.legalOrganizationName ?? "N/A"}`);
         doc.text(`Customer         : ${customer?.legalName ?? "N/A"}`);
         doc.text(`Status           : ${invoice.status}`);
@@ -358,7 +355,6 @@ class InvoiceService {
         doc.text(`Tax Amount       : $${invoice.invoiceTaxAmount}`);
         doc.text(`Total Value      : $${invoice.totalInvoiceValue}`);
         doc.text(`Payment Received : ${invoice.paymentReceivedOn ?? "N/A"}`);
-        doc.text(`Created At       : ${invoice.createdAt}`);
 
         doc.moveDown();
         doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();

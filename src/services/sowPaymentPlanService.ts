@@ -4,14 +4,11 @@ import TYPES from "../types/inversifyTypes";
 import SowPaymentPlan from "../models/sowPaymentPlanModel";
 import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
 import Invoice from "../models/invoiceModel";
-import InvoiceLineItem from "../models/invoiceLineItemModel";
-import Payment from "../models/paymentModel";
 import Sow from "../models/sowModel";
 import Customer from "../models/customerModel";
 import { ISowPaymentPlan } from "../interfaces/sowPaymentPlanInterface";
 import { CreateSowPaymentPlanDto } from "../dto/createSowPaymentPlanDto";
-import { UpdateSowPaymentPlanDto } from "../dto/updateSowPaymentPlanDto";
-import { ISowPaymentPlanDbService, ISowDbService } from "../postgresDB/pgInterface";
+import { ISowPaymentPlanDbService, ISowDbService, ICustomerDbService } from "../postgresDB/pgInterface";
 
 @injectable()
 class SowPaymentPlanService {
@@ -22,18 +19,26 @@ class SowPaymentPlanService {
     @inject(TYPES.SowDbService)
     private readonly sowDbService: ISowDbService,
 
+    @inject(TYPES.CustomerDbService)
+    private readonly customerDbService: ICustomerDbService,
+
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
 
   async createSowPaymentPlan(dto: CreateSowPaymentPlanDto): Promise<ISowPaymentPlan> {
     try {
-      const sow = await this.sowDbService.findSowById(dto.sowId);
+      const sow = await this.sowDbService.findSowByUId(dto.sowUId);
       if (!sow) {
         throw { status: 404, message: "SOW not found" };
       }
 
-      const totalAlreadyPlanned = await this.sowPaymentPlanDbService.getTotalPlannedAmountBySowId(dto.sowId);
+      const customer = await this.customerDbService.findCustomerByUId(dto.customerUId);
+      if (!customer) {
+        throw { status: 404, message: "Customer not found" };
+      }
+
+      const totalAlreadyPlanned = await this.sowPaymentPlanDbService.getTotalPlannedAmountBySowId(sow.id);
       const newTotal            = totalAlreadyPlanned + dto.totalActualAmount;
 
       if (newTotal > sow.totalValue) {
@@ -43,24 +48,23 @@ class SowPaymentPlanService {
         };
       }
 
-      const plan                   = new SowPaymentPlan();
-      plan.sowId                   = dto.sowId;
-      plan.customerId              = dto.customerId;
-      plan.plannedInvoiceDate      = dto.plannedInvoiceDate;
-      plan.totalActualAmount       = dto.totalActualAmount;
-      plan.version                 = 1;
-      plan.archive                 = false;
+      const plan              = new SowPaymentPlan();
+      plan.sowId              = sow.id;
+      plan.customerId         = customer.id;
+      plan.plannedInvoiceDate = dto.plannedInvoiceDate;
+      plan.totalActualAmount  = dto.totalActualAmount;
+      plan.version            = 1;
+      plan.archive            = false;
 
       const created = await this.sowPaymentPlanDbService.createSowPaymentPlan(plan);
       this.logger.info(`SOW Payment Plan created with id: ${created.id}`);
 
       return {
-        id:                 created.id,
-        sowPaymentPlanUId:  created.sowPaymentPlanUId,
-        sowId:              created.sowId,
-        customerId:         created.customerId,
-        plannedInvoiceDate: created.plannedInvoiceDate,
-        totalActualAmount:  created.totalActualAmount,
+        sowPaymentPlanUId:       created.sowPaymentPlanUId,
+        sowId:                   created.sowId,
+        customerId:              created.customerId,
+        plannedInvoiceDate:      created.plannedInvoiceDate,
+        totalActualAmount:       created.totalActualAmount,
         SowPaymentPlanLineItems: [],
         Invoices:                [],
       } as any;
@@ -82,49 +86,23 @@ class SowPaymentPlanService {
         const sow       = (plan as any).Sow as Sow | null;
 
         return {
-          id:                 plan.id,
           sowPaymentPlanUId:  plan.sowPaymentPlanUId,
-          sowId:              plan.sowId,
-          customerId:         plan.customerId,
           plannedInvoiceDate: plan.plannedInvoiceDate,
           totalActualAmount:  plan.totalActualAmount,
           customerName:       customer?.legalName ?? null,
           sowTitle:           sow?.title          ?? null,
           SowPaymentPlanLineItems: lineItems.map((li) => ({
-            id:                        li.id,
-            sowPaymentPlanLineItemUId: li.sowPaymentPlanLineItemUId,
-            orderId:                   li.orderId,
-            particular:                li.particular,
-            rate:                      li.rate,
-            unit:                      li.unit,
-            total:                     li.total,
+            particular: li.particular,
+            rate:       li.rate,
+            unit:       li.unit,
+            total:      li.total,
           })),
-          Invoices: invoices.map((invoice) => {
-            const invoiceLineItems = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
-            const payment          = (invoice as any).Payment as Payment | null;
-            return {
-              id:                invoice.id,
-              invoiceUId:        invoice.invoiceUId,
-              status:            invoice.status,
-              totalInvoiceValue: invoice.totalInvoiceValue,
-              invoiceAmount:     invoice.invoiceAmount,
-              paymentReceivedOn: invoice.paymentReceivedOn,
-              InvoiceLineItems: invoiceLineItems.map((li) => ({
-                id:                 li.id,
-                invoiceLineItemUId: li.invoiceLineItemUId,
-                orderNo:            li.orderNo,
-                particular:         li.particular,
-                rate:               li.rate,
-                unit:               li.unit,
-                total:              li.total,
-              })),
-              Payment: payment ? {
-                paymentDate:   payment.paymentDate,
-                isFullPayment: payment.isFullPayment,
-                bankPayment:   payment.bankPayment,
-              } : null,
-            };
-          }),
+          Invoices: invoices.map((invoice) => ({
+            status:            invoice.status,
+            totalInvoiceValue: invoice.totalInvoiceValue,
+            invoiceAmount:     invoice.invoiceAmount,
+            paymentReceivedOn: invoice.paymentReceivedOn,
+          })),
         } as any;
       });
     } catch (error: any) {
@@ -147,49 +125,25 @@ class SowPaymentPlanService {
       const sow       = (plan as any).Sow as Sow | null;
 
       return {
-        id:                 plan.id,
         sowPaymentPlanUId:  plan.sowPaymentPlanUId,
-        sowId:              plan.sowId,
-        customerId:         plan.customerId,
         plannedInvoiceDate: plan.plannedInvoiceDate,
         totalActualAmount:  plan.totalActualAmount,
         customerName:       customer?.legalName ?? null,
         sowTitle:           sow?.title          ?? null,
         SowPaymentPlanLineItems: lineItems.map((li) => ({
-          id:                        li.id,
-          sowPaymentPlanLineItemUId: li.sowPaymentPlanLineItemUId,
-          orderId:                   li.orderId,
-          particular:                li.particular,
-          rate:                      li.rate,
-          unit:                      li.unit,
-          total:                     li.total,
+          orderId:    li.orderId,
+          particular: li.particular,
+          rate:       li.rate,
+          unit:       li.unit,
+          total:      li.total,
         })),
-        Invoices: invoices.map((invoice) => {
-          const invoiceLineItems = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
-          const payment          = (invoice as any).Payment as Payment | null;
-          return {
-            id:                invoice.id,
-            invoiceUId:        invoice.invoiceUId,
-            status:            invoice.status,
-            totalInvoiceValue: invoice.totalInvoiceValue,
-            invoiceAmount:     invoice.invoiceAmount,
-            paymentReceivedOn: invoice.paymentReceivedOn,
-            InvoiceLineItems: invoiceLineItems.map((li) => ({
-              id:                 li.id,
-              invoiceLineItemUId: li.invoiceLineItemUId,
-              orderNo:            li.orderNo,
-              particular:         li.particular,
-              rate:               li.rate,
-              unit:               li.unit,
-              total:              li.total,
-            })),
-            Payment: payment ? {
-              paymentDate:   payment.paymentDate,
-              isFullPayment: payment.isFullPayment,
-              bankPayment:   payment.bankPayment,
-            } : null,
-          };
-        }),
+        Invoices: invoices.map((invoice) => ({
+          invoiceUId:        invoice.invoiceUId,
+          status:            invoice.status,
+          totalInvoiceValue: invoice.totalInvoiceValue,
+          invoiceAmount:     invoice.invoiceAmount,
+          paymentReceivedOn: invoice.paymentReceivedOn,
+        })),
       } as any;
     } catch (error: any) {
       this.logger.error(`Error fetching SOW Payment Plan with UId: ${sowPaymentPlanUId}`, error);
@@ -197,36 +151,35 @@ class SowPaymentPlanService {
     }
   }
 
-  async getSowPaymentPlansBySowId(sowId: string): Promise<ISowPaymentPlan[]> {
+  async getSowPaymentPlansBySowId(sowUId: string): Promise<ISowPaymentPlan[]> {
     try {
-      const plans = await this.sowPaymentPlanDbService.findSowPaymentPlansBySowId(sowId);
+      const sow = await this.sowDbService.findSowByUId(sowUId);
+      if (!sow) {
+        throw { status: 404, message: "SOW not found" };
+      }
+
+      const plans = await this.sowPaymentPlanDbService.findSowPaymentPlansBySowId(sow.id);
       if (!plans.length) {
         throw { status: 404, message: "No SOW Payment Plans found for this SOW" };
       }
-      this.logger.info(`Fetched ${plans.length} SOW Payment Plans for sowId: ${sowId}`);
+      this.logger.info(`Fetched ${plans.length} SOW Payment Plans for sowUId: ${sowUId}`);
 
       return plans.map((plan) => {
         const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
         const invoices  = ((plan as any).Invoices as Invoice[])                               ?? [];
 
         return {
-          id:                 plan.id,
           sowPaymentPlanUId:  plan.sowPaymentPlanUId,
-          sowId:              plan.sowId,
-          customerId:         plan.customerId,
           plannedInvoiceDate: plan.plannedInvoiceDate,
           totalActualAmount:  plan.totalActualAmount,
           SowPaymentPlanLineItems: lineItems.map((li) => ({
-            id:                        li.id,
-            sowPaymentPlanLineItemUId: li.sowPaymentPlanLineItemUId,
-            orderId:                   li.orderId,
-            particular:                li.particular,
-            rate:                      li.rate,
-            unit:                      li.unit,
-            total:                     li.total,
+            orderId:    li.orderId,
+            particular: li.particular,
+            rate:       li.rate,
+            unit:       li.unit,
+            total:      li.total,
           })),
           Invoices: invoices.map((invoice) => ({
-            id:                invoice.id,
             invoiceUId:        invoice.invoiceUId,
             status:            invoice.status,
             totalInvoiceValue: invoice.totalInvoiceValue,
@@ -236,77 +189,10 @@ class SowPaymentPlanService {
         } as any;
       });
     } catch (error: any) {
-      this.logger.error(`Error fetching SOW Payment Plans for sowId: ${sowId}`, error);
+      this.logger.error(`Error fetching SOW Payment Plans for sowUId: ${sowUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch SOW Payment Plans" };
     }
   }
-
-  // async updateSowPaymentPlan(dto: UpdateSowPaymentPlanDto): Promise<ISowPaymentPlan> {
-  //   try {
-  //     const existing = await this.sowPaymentPlanDbService.findSowPaymentPlanByUId(dto.sowPaymentPlanUId);
-  //     if (!existing) {
-  //       throw { status: 404, message: "SOW Payment Plan not found" };
-  //     }
-
-  //     if (dto.totalActualAmount) {
-  //       const sow = await this.sowDbService.findSowById(existing.sowId);
-  //       if (!sow) {
-  //         throw { status: 404, message: "SOW not found" };
-  //       }
-  //       const totalExcludingCurrent = (await this.sowPaymentPlanDbService.getTotalPlannedAmountBySowId(existing.sowId)) - existing.totalActualAmount;
-  //       const newTotal              = totalExcludingCurrent + dto.totalActualAmount;
-  //       if (newTotal > sow.totalValue) {
-  //         throw {
-  //           status: 400,
-  //           message: `Total planned amount ($${newTotal}) exceeds SOW total value ($${sow.totalValue})`,
-  //         };
-  //       }
-  //     }
-
-  //     await this.sowPaymentPlanDbService.archiveSowPaymentPlan(existing.id!);
-
-  //     const updated                = new SowPaymentPlan();
-  //     updated.sowPaymentPlanUId    = existing.sowPaymentPlanUId;
-  //     updated.version              = existing.version + 1;
-  //     updated.archive              = false;
-  //     updated.sowId                = existing.sowId;
-  //     updated.customerId           = existing.customerId;
-  //     updated.plannedInvoiceDate   = dto.plannedInvoiceDate ?? existing.plannedInvoiceDate;
-  //     updated.totalActualAmount    = dto.totalActualAmount  ?? existing.totalActualAmount;
-
-  //     const created = await this.sowPaymentPlanDbService.createSowPaymentPlan(updated);
-  //     this.logger.info(`SOW Payment Plan updated with UId: ${dto.sowPaymentPlanUId} version: ${created.version}`);
-
-  //     return {
-  //       id:                 created.id,
-  //       sowPaymentPlanUId:  created.sowPaymentPlanUId,
-  //       sowId:              created.sowId,
-  //       customerId:         created.customerId,
-  //       plannedInvoiceDate: created.plannedInvoiceDate,
-  //       totalActualAmount:  created.totalActualAmount,
-  //       SowPaymentPlanLineItems: [],
-  //       Invoices:                [],
-  //     } as any;
-  //   } catch (error: any) {
-  //     this.logger.error("Error updating SOW Payment Plan", error);
-  //     throw error.status ? error : { status: 500, message: "Failed to update SOW Payment Plan" };
-  //   }
-  // }
-
-  // async deleteSowPaymentPlan(sowPaymentPlanUId: string): Promise<{ message: string }> {
-  //   try {
-  //     const existing = await this.sowPaymentPlanDbService.findSowPaymentPlanByUId(sowPaymentPlanUId);
-  //     if (!existing) {
-  //       throw { status: 404, message: "SOW Payment Plan not found" };
-  //     }
-  //     await this.sowPaymentPlanDbService.archiveSowPaymentPlan(existing.id!);
-  //     this.logger.info(`SOW Payment Plan deleted with UId: ${sowPaymentPlanUId}`);
-  //     return { message: "SOW Payment Plan deleted successfully" };
-  //   } catch (error: any) {
-  //     this.logger.error("Error deleting SOW Payment Plan", error);
-  //     throw error.status ? error : { status: 500, message: "Failed to delete SOW Payment Plan" };
-  //   }
-  // }
 
   async getInvoiceSchedule(): Promise<any[]> {
     try {
@@ -317,15 +203,10 @@ class SowPaymentPlanService {
         const invoices = (plan as any).Invoices as any[];
         const invoice  = invoices && invoices.length > 0 ? invoices[0] : null;
         return {
-          planId:             plan.id,
-          sowPaymentPlanUId:  plan.sowPaymentPlanUId,
-          sowId:              plan.sowId,
-          customerId:         plan.customerId,
           plannedInvoiceDate: plan.plannedInvoiceDate,
           totalActualAmount:  plan.totalActualAmount,
           invoiceGenerated:   invoice ? true : false,
-          invoiceId:          invoice ? invoice.id : null,
-          invoiceStatus:      invoice ? invoice.status : null,
+          invoiceStatus:      invoice ? invoice.status     : null,
         };
       });
     } catch (error: any) {

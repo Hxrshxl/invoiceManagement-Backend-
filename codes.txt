@@ -1,5 +1,5 @@
 # Source code dump
-Generated: 2026-03-19T06:34:02.794Z
+Generated: 2026-03-19T09:04:15.039Z
 Root: C:\Practice\15\invoiceManagement-Backend-
 Includes: 66 file(s) under src/
 
@@ -697,20 +697,20 @@ class PaymentController {
     }
   }
 
-  async getPaymentByInvoiceIdHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { invoiceId } = req.body;
-      if (!invoiceId) {
-        res.status(400).json({ success: false, message: "invoiceId is required" });
-        return;
-      }
-      const payment = await this.paymentService.getPaymentByInvoiceId(invoiceId);
-      res.status(200).json({ success: true, message: "Payment fetched successfully", data: payment });
-    } catch (error: any) {
-      this.logger.error("Error in getPaymentByInvoiceIdHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+async getPaymentByInvoiceIdHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { invoiceUId } = req.body;  // ✅ changed from invoiceId
+    if (!invoiceUId) {
+      res.status(400).json({ success: false, message: "invoiceUId is required" });  // ✅
+      return;
     }
+    const payment = await this.paymentService.getPaymentByInvoiceId(invoiceUId);
+    res.status(200).json({ success: true, message: "Payment fetched successfully", data: payment });
+  } catch (error: any) {
+    this.logger.error("Error in getPaymentByInvoiceIdHandler", error);
+    res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
   }
+}
 
   // async updatePaymentHandler(req: Request, res: Response): Promise<void> {
   //   try {
@@ -1004,21 +1004,20 @@ class SowPaymentPlanLineItemController {
     }
   }
 
-  async getSowPaymentPlanLineItemsByPlanIdHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { sowPaymentPlanId } = req.body;
-      if (!sowPaymentPlanId) {
-        res.status(400).json({ success: false, message: "sowPaymentPlanId is required" });
-        return;
-      }
-      const lineItems = await this.sowPaymentPlanLineItemService.getSowPaymentPlanLineItemsByPlanId(sowPaymentPlanId);
-      res.status(200).json({ success: true, message: "SOW Payment Plan Line Items fetched successfully", data: lineItems });
-    } catch (error: any) {
-      this.logger.error("Error in getSowPaymentPlanLineItemsByPlanIdHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
+ async getSowPaymentPlanLineItemsByPlanIdHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { sowPaymentPlanUId } = req.body;  // ✅ changed
+    if (!sowPaymentPlanUId) {
+      res.status(400).json({ success: false, message: "sowPaymentPlanUId is required" });
+      return;
     }
+    const lineItems = await this.sowPaymentPlanLineItemService.getSowPaymentPlanLineItemsByPlanId(sowPaymentPlanUId);
+    res.status(200).json({ success: true, message: "SOW Payment Plan Line Items fetched successfully", data: lineItems });
+  } catch (error: any) {
+    this.logger.error("Error in getSowPaymentPlanLineItemsByPlanIdHandler", error);
+    res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
   }
-
+}
   // async updateSowPaymentPlanLineItemHandler(req: Request, res: Response): Promise<void> {
   //   try {
   //     const { dto, errors } = await validateDto(UpdateSowPaymentPlanLineItemDto, req.body);
@@ -1059,7 +1058,7 @@ import { IsString, IsNotEmpty, IsBoolean, IsDateString } from "class-validator";
 export class CreateCustomerDto {
   @IsString()
   @IsNotEmpty()
-  organizationId: string;
+  organizationUId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -1173,10 +1172,9 @@ export class GetInvoiceByIdDto {
 import { IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class CreateInvoiceLineItemDto {
-
   @IsString()
   @IsNotEmpty()
-  invoiceId: string;
+  invoiceUId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -1247,10 +1245,9 @@ export class CreateOrganizationDto {
 import { IsBoolean, IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreatePaymentDto {
-
   @IsString()
   @IsNotEmpty()
-  invoiceId: string;
+  invoiceUId: string;
 
   @IsDateString()
   @IsNotEmpty()
@@ -1285,7 +1282,7 @@ import { IsString, IsNotEmpty, IsNumber, IsDateString, IsArray } from "class-val
 export class CreateSowDto {
   @IsString()
   @IsNotEmpty()
-  customerId: string;
+  customerUId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -1327,11 +1324,11 @@ import { IsString, IsNotEmpty, IsNumber, IsDateString } from "class-validator";
 export class CreateSowPaymentPlanDto {
   @IsString()
   @IsNotEmpty()
-  sowId: string;
+  sowUId: string;
 
   @IsString()
   @IsNotEmpty()
-  customerId: string;
+  customerUId: string;
 
   @IsDateString()
   @IsNotEmpty()
@@ -1349,11 +1346,11 @@ import { IsString, IsNotEmpty, IsNumber } from "class-validator";
 export class CreateSowPaymentPlanLineItemDto {
   @IsString()
   @IsNotEmpty()
-  sowPaymentPlanId: string;
+  sowPaymentPlanUId: string;
 
   @IsString()
   @IsNotEmpty()
-  sowId: string;
+  sowUId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -3807,7 +3804,7 @@ import SowPaymentPlan from "../models/sowPaymentPlanModel";
 import Invoice from "../models/invoiceModel";
 import { CreateCustomerDto } from "../dto/createCustomerDto";
 import { UpdateCustomerDto } from "../dto/updateCustomerDto";
-import { ICustomerDbService } from "../postgresDB/pgInterface";
+import { ICustomerDbService, IOrganizationDbService } from "../postgresDB/pgInterface";
 import { ICustomer } from "../interfaces/customerInterface";
 
 @injectable()
@@ -3816,19 +3813,28 @@ class CustomerService {
     @inject(TYPES.CustomerDbService)
     private readonly customerDbService: ICustomerDbService,
 
+    @inject(TYPES.OrganizationDbService)
+    private readonly organizationDbService: IOrganizationDbService,
+
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
 
   async createCustomer(dto: CreateCustomerDto): Promise<ICustomer> {
     try {
+      // ─── Resolve organizationUId → internal id ────────────────────────────
+      const organization = await this.organizationDbService.findOrganizationByUId(dto.organizationUId);
+      if (!organization) {
+        throw { status: 404, message: "Organization not found" };
+      }
+
       const existing = await this.customerDbService.findCustomerByLegalName(dto.legalName);
       if (existing) {
         throw { status: 409, message: "Customer with this legal name already exists" };
       }
 
       const customer          = new Customer();
-      customer.organizationId = dto.organizationId;
+      customer.organizationId = organization.id;        // resolved internal id
       customer.legalName      = dto.legalName;
       customer.shortName      = dto.shortName;
       customer.displayName    = dto.displayName;
@@ -3884,7 +3890,6 @@ class CustomerService {
               sowUId:      sow.sowUId,
               title:       sow.title,
               totalValue:  sow.totalValue,
-              currency:    sow.currency,
               validFrom:   sow.validFrom,
               validUpto:   sow.validUpto,
               SowPaymentPlans: plans.map((plan) => ({
@@ -3935,7 +3940,6 @@ class CustomerService {
             sowUId:      sow.sowUId,
             title:       sow.title,
             totalValue:  sow.totalValue,
-            currency:    sow.currency,
             validFrom:   sow.validFrom,
             validUpto:   sow.validUpto,
             SowPaymentPlans: plans.map((plan) => ({
@@ -3960,66 +3964,6 @@ class CustomerService {
       throw error.status ? error : { status: 500, message: "Failed to fetch customer" };
     }
   }
-
-  // async updateCustomer(dto: UpdateCustomerDto): Promise<ICustomer> {
-  //   try {
-  //     const existing = await this.customerDbService.findCustomerByUId(dto.customerUId);
-  //     if (!existing) {
-  //       throw { status: 404, message: "Customer not found" };
-  //     }
-
-  //     await this.customerDbService.archiveCustomer(existing.id!);
-
-  //     const updated          = new Customer();
-  //     updated.customerUId    = existing.customerUId;
-  //     updated.version        = existing.version + 1;
-  //     updated.archive        = false;
-  //     updated.organizationId = existing.organizationId;
-  //     updated.legalName      = dto.legalName    ?? existing.legalName;
-  //     updated.shortName      = dto.shortName    ?? existing.shortName;
-  //     updated.displayName    = dto.displayName  ?? existing.displayName;
-  //     updated.addressId      = dto.addressId    ?? existing.addressId;
-  //     updated.isMSASigned    = dto.isMSASigned  ?? existing.isMSASigned;
-  //     updated.msaSignedOn    = dto.msaSignedOn  ?? existing.msaSignedOn;
-  //     updated.msaValidFrom   = dto.msaValidFrom ?? existing.msaValidFrom;
-  //     updated.msaValidUpto   = dto.msaValidUpto ?? existing.msaValidUpto;
-  //     updated.isNDASigned    = dto.isNDASigned  ?? existing.isNDASigned;
-  //     updated.ndaSignedOn    = dto.ndaSignedOn  ?? existing.ndaSignedOn;
-  //     updated.ndaValidFrom   = dto.ndaValidFrom ?? existing.ndaValidFrom;
-  //     updated.ndaValidUpto   = dto.ndaValidUpto ?? existing.ndaValidUpto;
-
-  //     const created = await this.customerDbService.createCustomer(updated);
-  //     this.logger.info(`Customer updated with UId: ${dto.customerUId} version: ${created.version}`);
-
-  //     return {
-  //       id:             created.id,
-  //       customerUId:    created.customerUId,
-  //       organizationId: created.organizationId,
-  //       legalName:      created.legalName,
-  //       shortName:      created.shortName,
-  //       displayName:    created.displayName,
-  //       Sows:           [],
-  //     } as any;
-  //   } catch (error: any) {
-  //     this.logger.error("Error updating customer", error);
-  //     throw error.status ? error : { status: 500, message: "Failed to update customer" };
-  //   }
-  // }
-
-  // async deleteCustomer(customerUId: string): Promise<{ message: string }> {
-  //   try {
-  //     const existing = await this.customerDbService.findCustomerByUId(customerUId);
-  //     if (!existing) {
-  //       throw { status: 404, message: "Customer not found" };
-  //     }
-  //     await this.customerDbService.archiveCustomer(existing.id!);
-  //     this.logger.info(`Customer deleted with UId: ${customerUId}`);
-  //     return { message: "Customer deleted successfully" };
-  //   } catch (error: any) {
-  //     this.logger.error("Error deleting customer", error);
-  //     throw error.status ? error : { status: 500, message: "Failed to delete customer" };
-  //   }
-  // }
 }
 
 export default CustomerService;
@@ -4048,22 +3992,22 @@ class InvoiceLineItemService {
     private readonly logger: Logger
   ) {}
 
-  async createInvoiceLineItem(dto: CreateInvoiceLineItemDto): Promise<IInvoiceLineItem> {
-    try {
-      const existingInvoice = await this.invoiceDbService.findInvoiceById(dto.invoiceId);
-      if (!existingInvoice) {
-        throw { status: 404, message: "Invoice not found" };
-      }
+ async createInvoiceLineItem(dto: CreateInvoiceLineItemDto): Promise<IInvoiceLineItem> {
+  try {
+    const existingInvoice = await this.invoiceDbService.findInvoiceByUId(dto.invoiceUId); // ✅ findByUId
+    if (!existingInvoice) {
+      throw { status: 404, message: "Invoice not found" };
+    }
 
-      const invoiceLineItem            = new InvoiceLineItem();
-      invoiceLineItem.invoiceId        = dto.invoiceId;
-      invoiceLineItem.orderNo          = dto.orderNo;
-      invoiceLineItem.particular       = dto.particular;
-      invoiceLineItem.rate             = dto.rate;
-      invoiceLineItem.unit             = dto.unit;
-      invoiceLineItem.total            = dto.total;
-      invoiceLineItem.version          = 1;
-      invoiceLineItem.archive          = false;
+    const invoiceLineItem            = new InvoiceLineItem();
+    invoiceLineItem.invoiceId        = existingInvoice.id;  // ✅ use resolved .id internally
+    invoiceLineItem.orderNo          = dto.orderNo;
+    invoiceLineItem.particular       = dto.particular;
+    invoiceLineItem.rate             = dto.rate;
+    invoiceLineItem.unit             = dto.unit;
+    invoiceLineItem.total            = dto.total;
+    invoiceLineItem.version          = 1;
+    invoiceLineItem.archive          = false;
 
       const created = await this.invoiceLineItemDbService.createInvoiceLineItem(invoiceLineItem);
       this.logger.info(`Invoice Line Item created with id: ${created.id}`);
@@ -4596,7 +4540,6 @@ import Customer from "../models/customerModel";
 import Sow from "../models/sowModel";
 import SowPaymentPlan from "../models/sowPaymentPlanModel";
 import { CreateOrganizationDto } from "../dto/createOrganizationDto";
-import { UpdateOrganizationDto } from "../dto/updateOrganizationDto";
 import { IOrganizationDbService } from "../postgresDB/pgInterface";
 import TYPES from "../types/inversifyTypes";
 import { IOrganization } from "../interfaces/organizationInterface";
@@ -4656,43 +4599,25 @@ class OrganizationService {
 
       return organizations.map((org) => {
         const customers = ((org as any).Customers as Customer[]) ?? [];
-        return {
-          id:                    org.id,
-          organizationUId:       org.organizationUId,
-          legalOrganizationName: org.legalOrganizationName,
-          contactName:           org.contactName,
-          displayName:           org.displayName,
-          email:                 org.email,
-          phone:                 org.phone,
-          Customers: customers.map((customer) => {
-            const sows = ((customer as any).Sows as Sow[]) ?? [];
+      return {
+        id:                    org.id,
+        organizationUId:       org.organizationUId,
+        legalOrganizationName: org.legalOrganizationName,
+        contactName:           org.contactName,
+        displayName:           org.displayName,
+        email:                 org.email,
+        phone:                 org.phone,
+        Customers: customers.map((customer) => {
+          const sows = ((customer as any).Sows as Sow[]) ?? [];
             return {
-              id:          customer.id,
-              customerUId: customer.customerUId,
-              legalName:   customer.legalName,
-              shortName:   customer.shortName,
-              displayName: customer.displayName,
-              Sows: sows.map((sow) => {
-                const plans = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
-                return {
-                  id:              sow.id,
-                  sowUId:          sow.sowUId,
-                  title:           sow.title,
-                  totalValue:      sow.totalValue,
-                  currency:        sow.currency,
-                  validFrom:       sow.validFrom,
-                  validUpto:       sow.validUpto,
-                  SowPaymentPlans: plans.map((plan) => ({
-                    id:                 plan.id,
-                    sowPaymentPlanUId:  plan.sowPaymentPlanUId,
-                    plannedInvoiceDate: plan.plannedInvoiceDate,
-                    totalActualAmount:  plan.totalActualAmount,
-                  })),
-                };
-              }),
+            id:          customer.id,
+            customerUId: customer.customerUId,
+            legalName:   customer.legalName,
+            shortName:   customer.shortName,
+            displayName: customer.displayName,
             };
-          }),
-        } as any;
+        }),
+      } as any;
       });
     } catch (error: any) {
       this.logger.error("Error fetching organizations", error);
@@ -4717,31 +4642,13 @@ class OrganizationService {
         phone:                 org.phone,
         Customers: customers.map((customer) => {
           const sows = ((customer as any).Sows as Sow[]) ?? [];
-          return {
+            return {
             id:          customer.id,
             customerUId: customer.customerUId,
             legalName:   customer.legalName,
             shortName:   customer.shortName,
             displayName: customer.displayName,
-            Sows: sows.map((sow) => {
-              const plans = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
-              return {
-                id:              sow.id,
-                sowUId:          sow.sowUId,
-                title:           sow.title,
-                totalValue:      sow.totalValue,
-                currency:        sow.currency,
-                validFrom:       sow.validFrom,
-                validUpto:       sow.validUpto,
-                SowPaymentPlans: plans.map((plan) => ({
-                  id:                 plan.id,
-                  sowPaymentPlanUId:  plan.sowPaymentPlanUId,
-                  plannedInvoiceDate: plan.plannedInvoiceDate,
-                  totalActualAmount:  plan.totalActualAmount,
-                })),
-              };
-            }),
-          };
+            };
         }),
       } as any;
     } catch (error: any) {
@@ -4837,44 +4744,43 @@ class PaymentService {
     private readonly logger: Logger
   ) {}
 
-  async createPayment(dto: CreatePaymentDto): Promise<IPayment> {
-    try {
-      const invoice = await this.invoiceDbService.findInvoiceById(dto.invoiceId);
-      if (!invoice) {
-        throw { status: 404, message: "Invoice not found" };
-      }
-      if (invoice.status === "Drafted") {
-        throw { status: 400, message: "Cannot record payment for a Drafted invoice — please approve it first" };
-      }
-      if (invoice.status === "Cancelled") {
-        throw { status: 400, message: "Cannot record payment for a Cancelled invoice" };
-      }
+ async createPayment(dto: CreatePaymentDto): Promise<IPayment> {
+  try {
+    const invoice = await this.invoiceDbService.findInvoiceByUId(dto.invoiceUId); // ✅ findByUId
+    if (!invoice) {
+      throw { status: 404, message: "Invoice not found" };
+    }
+    if (invoice.status === "Drafted") {
+      throw { status: 400, message: "Cannot record payment for a Drafted invoice — please approve it first" };
+    }
+    if (invoice.status === "Cancelled") {
+      throw { status: 400, message: "Cannot record payment for a Cancelled invoice" };
+    }
 
-      const existingPayment = await this.paymentDbService.findPaymentByInvoiceId(dto.invoiceId);
-      if (existingPayment) {
-        throw { status: 409, message: "Payment already recorded for this invoice" };
-      }
+    const existingPayment = await this.paymentDbService.findPaymentByInvoiceId(invoice.id!); // ✅ resolved .id
+    if (existingPayment) {
+      throw { status: 409, message: "Payment already recorded for this invoice" };
+    }
 
-      const payment          = new Payment();
-      payment.invoiceId      = dto.invoiceId;
-      payment.paymentDate    = dto.paymentDate;
-      payment.forExAmount    = dto.forExAmount;
-      payment.currency       = dto.currency;
-      payment.indianAmount   = dto.indianAmount;
-      payment.isFullPayment  = dto.isFullPayment;
-      payment.bankPayment    = dto.bankPayment ?? "";
-      payment.details        = dto.details     ?? "";
-      payment.version        = 1;
-      payment.archive        = false;
+    const payment          = new Payment();
+    payment.invoiceId      = invoice.id!;       // ✅ resolved .id
+    payment.paymentDate    = dto.paymentDate;
+    payment.forExAmount    = dto.forExAmount;
+    payment.currency       = dto.currency;
+    payment.indianAmount   = dto.indianAmount;
+    payment.isFullPayment  = dto.isFullPayment;
+    payment.bankPayment    = dto.bankPayment ?? "";
+    payment.details        = dto.details     ?? "";
+    payment.version        = 1;
+    payment.archive        = false;
 
-      const created = await this.paymentDbService.createPayment(payment);
+    const created = await this.paymentDbService.createPayment(payment);
 
-      await this.invoiceDbService.updateInvoicePayment(
-        dto.invoiceId,
-        created.id!,
-        dto.paymentDate
-      );
-
+    await this.invoiceDbService.updateInvoicePayment(
+      invoice.id!,          // ✅ resolved .id
+      created.id!,
+      dto.paymentDate
+    );
       this.logger.info(`Payment created with id: ${created.id}`);
 
       return {
@@ -4895,19 +4801,19 @@ class PaymentService {
     }
   }
 
-  async getPaymentByInvoiceId(invoiceId: string): Promise<IPayment> {
-    try {
-      const invoice = await this.invoiceDbService.findInvoiceById(invoiceId);
-      if (!invoice) {
-        throw { status: 404, message: "Invoice not found" };
-      }
+async getPaymentByInvoiceId(invoiceUId: string): Promise<IPayment> {
+  try {
+    const invoice = await this.invoiceDbService.findInvoiceByUId(invoiceUId);  // ✅ findByUId
+    if (!invoice) {
+      throw { status: 404, message: "Invoice not found" };
+    }
 
-      const payment = await this.paymentDbService.findPaymentByInvoiceId(invoiceId);
-      if (!payment) {
-        throw { status: 404, message: "No payment found for this invoice" };
-      }
+    const payment = await this.paymentDbService.findPaymentByInvoiceId(invoice.id!);  // ✅ resolved id
+    if (!payment) {
+      throw { status: 404, message: "No payment found for this invoice" };
+    }
 
-      this.logger.info(`Fetched payment for invoiceId: ${invoiceId}`);
+      this.logger.info(`Fetched payment for invoiceId: ${invoiceUId}`);
 
       return {
         id:            payment.id,
@@ -4922,7 +4828,7 @@ class PaymentService {
         details:       payment.details,
       } as any;
     } catch (error: any) {
-      this.logger.error(`Error fetching payment for invoiceId: ${invoiceId}`, error);
+      this.logger.error(`Error fetching payment for invoiceId: ${invoiceUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch payment" };
     }
   }
@@ -4998,7 +4904,7 @@ import SowPaymentPlan from "../models/sowPaymentPlanModel";
 import Sow from "../models/sowModel";
 import { CreateSowPaymentPlanLineItemDto } from "../dto/createSowPaymentPlanLineItemDto";
 import { UpdateSowPaymentPlanLineItemDto } from "../dto/updateSowPaymentPlanLineItemDto";
-import { ISowPaymentPlanLineItemDbService } from "../postgresDB/pgInterface";
+import { ISowPaymentPlanLineItemDbService, ISowPaymentPlanDbService, ISowDbService } from "../postgresDB/pgInterface";
 import { ISowPaymentPlanLineItem } from "../interfaces/sowPaymentPlanLineItemInterface";
 
 @injectable()
@@ -5007,15 +4913,31 @@ class SowPaymentPlanLineItemService {
     @inject(TYPES.SowPaymentPlanLineItemDbService)
     private readonly sowPaymentPlanLineItemDbService: ISowPaymentPlanLineItemDbService,
 
+    @inject(TYPES.SowPaymentPlanDbService)
+    private readonly sowPaymentPlanDbService: ISowPaymentPlanDbService,
+
+    @inject(TYPES.SowDbService)
+    private readonly sowDbService: ISowDbService,
+
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
 
   async createSowPaymentPlanLineItem(dto: CreateSowPaymentPlanLineItemDto): Promise<ISowPaymentPlanLineItem> {
     try {
+      const existingPlan = await this.sowPaymentPlanDbService.findSowPaymentPlanByUId(dto.sowPaymentPlanUId);
+      if (!existingPlan) {
+        throw { status: 404, message: "SOW Payment Plan not found" };
+      }
+
+      const existingSow = await this.sowDbService.findSowByUId(dto.sowUId);
+      if (!existingSow) {
+        throw { status: 404, message: "SOW not found" };
+      }
+
       const lineItem                    = new SowPaymentPlanLineItem();
-      lineItem.sowPaymentPlanId         = dto.sowPaymentPlanId;
-      lineItem.sowId                    = dto.sowId;
+      lineItem.sowPaymentPlanId         = existingPlan.id!;
+      lineItem.sowId                    = existingSow.id!;
       lineItem.orderId                  = dto.orderId;
       lineItem.particular               = dto.particular;
       lineItem.rate                     = dto.rate;
@@ -5072,13 +4994,18 @@ class SowPaymentPlanLineItemService {
     }
   }
 
-  async getSowPaymentPlanLineItemsByPlanId(sowPaymentPlanId: string): Promise<ISowPaymentPlanLineItem[]> {
+  async getSowPaymentPlanLineItemsByPlanId(sowPaymentPlanUId: string): Promise<ISowPaymentPlanLineItem[]> {
     try {
-      const lineItems = await this.sowPaymentPlanLineItemDbService.findSowPaymentPlanLineItemsByPlanId(sowPaymentPlanId);
+      const existingPlan = await this.sowPaymentPlanDbService.findSowPaymentPlanByUId(sowPaymentPlanUId);
+      if (!existingPlan) {
+        throw { status: 404, message: "SOW Payment Plan not found" };
+      }
+
+      const lineItems = await this.sowPaymentPlanLineItemDbService.findSowPaymentPlanLineItemsByPlanId(existingPlan.id!);
       if (!lineItems.length) {
         throw { status: 404, message: "No line items found for this SOW Payment Plan" };
       }
-      this.logger.info(`Fetched ${lineItems.length} line items for sowPaymentPlanId: ${sowPaymentPlanId}`);
+      this.logger.info(`Fetched ${lineItems.length} line items for sowPaymentPlanUId: ${sowPaymentPlanUId}`);
 
       return lineItems.map((lineItem) => {
         const plan = (lineItem as any).SowPaymentPlan as SowPaymentPlan | null;
@@ -5098,66 +5025,10 @@ class SowPaymentPlanLineItemService {
         } as any;
       });
     } catch (error: any) {
-      this.logger.error(`Error fetching line items for sowPaymentPlanId: ${sowPaymentPlanId}`, error);
+      this.logger.error(`Error fetching line items for sowPaymentPlanUId: ${sowPaymentPlanUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch SOW Payment Plan Line Items" };
     }
   }
-
-  // async updateSowPaymentPlanLineItem(dto: UpdateSowPaymentPlanLineItemDto): Promise<ISowPaymentPlanLineItem> {
-  //   try {
-  //     const existing = await this.sowPaymentPlanLineItemDbService.findSowPaymentPlanLineItemByUId(dto.sowPaymentPlanLineItemUId);
-  //     if (!existing) {
-  //       throw { status: 404, message: "SOW Payment Plan Line Item not found" };
-  //     }
-
-  //     await this.sowPaymentPlanLineItemDbService.archiveSowPaymentPlanLineItem(existing.id!);
-
-  //     const updated                    = new SowPaymentPlanLineItem();
-  //     updated.sowPaymentPlanLineItemUId = existing.sowPaymentPlanLineItemUId;
-  //     updated.version                  = existing.version + 1;
-  //     updated.archive                  = false;
-  //     updated.sowPaymentPlanId         = existing.sowPaymentPlanId;
-  //     updated.sowId                    = existing.sowId;
-  //     updated.orderId                  = dto.orderId    ?? existing.orderId;
-  //     updated.particular               = dto.particular ?? existing.particular;
-  //     updated.rate                     = dto.rate       ?? existing.rate;
-  //     updated.unit                     = dto.unit       ?? existing.unit;
-  //     updated.total                    = dto.total      ?? existing.total;
-
-  //     const created = await this.sowPaymentPlanLineItemDbService.createSowPaymentPlanLineItem(updated);
-  //     this.logger.info(`SOW Payment Plan Line Item updated with UId: ${dto.sowPaymentPlanLineItemUId} version: ${created.version}`);
-
-  //     return {
-  //       id:                        created.id,
-  //       sowPaymentPlanLineItemUId: created.sowPaymentPlanLineItemUId,
-  //       sowPaymentPlanId:          created.sowPaymentPlanId,
-  //       sowId:                     created.sowId,
-  //       orderId:                   created.orderId,
-  //       particular:                created.particular,
-  //       rate:                      created.rate,
-  //       unit:                      created.unit,
-  //       total:                     created.total,
-  //     } as any;
-  //   } catch (error: any) {
-  //     this.logger.error("Error updating SOW Payment Plan Line Item", error);
-  //     throw error.status ? error : { status: 500, message: "Failed to update SOW Payment Plan Line Item" };
-  //   }
-  // }
-
-  // async deleteSowPaymentPlanLineItem(sowPaymentPlanLineItemUId: string): Promise<{ message: string }> {
-  //   try {
-  //     const existing = await this.sowPaymentPlanLineItemDbService.findSowPaymentPlanLineItemByUId(sowPaymentPlanLineItemUId);
-  //     if (!existing) {
-  //       throw { status: 404, message: "SOW Payment Plan Line Item not found" };
-  //     }
-  //     await this.sowPaymentPlanLineItemDbService.archiveSowPaymentPlanLineItem(existing.id!);
-  //     this.logger.info(`SOW Payment Plan Line Item deleted with UId: ${sowPaymentPlanLineItemUId}`);
-  //     return { message: "SOW Payment Plan Line Item deleted successfully" };
-  //   } catch (error: any) {
-  //     this.logger.error("Error deleting SOW Payment Plan Line Item", error);
-  //     throw error.status ? error : { status: 500, message: "Failed to delete SOW Payment Plan Line Item" };
-  //   }
-  // }
 }
 
 export default SowPaymentPlanLineItemService;
@@ -5176,8 +5047,7 @@ import Sow from "../models/sowModel";
 import Customer from "../models/customerModel";
 import { ISowPaymentPlan } from "../interfaces/sowPaymentPlanInterface";
 import { CreateSowPaymentPlanDto } from "../dto/createSowPaymentPlanDto";
-import { UpdateSowPaymentPlanDto } from "../dto/updateSowPaymentPlanDto";
-import { ISowPaymentPlanDbService, ISowDbService } from "../postgresDB/pgInterface";
+import { ISowPaymentPlanDbService, ISowDbService, ICustomerDbService } from "../postgresDB/pgInterface";
 
 @injectable()
 class SowPaymentPlanService {
@@ -5188,18 +5058,29 @@ class SowPaymentPlanService {
     @inject(TYPES.SowDbService)
     private readonly sowDbService: ISowDbService,
 
+    @inject(TYPES.CustomerDbService)
+    private readonly customerDbService: ICustomerDbService,
+
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
 
   async createSowPaymentPlan(dto: CreateSowPaymentPlanDto): Promise<ISowPaymentPlan> {
     try {
-      const sow = await this.sowDbService.findSowById(dto.sowId);
+      // ─── Resolve sowUId → internal id ────────────────────────────────────
+      const sow = await this.sowDbService.findSowByUId(dto.sowUId);
       if (!sow) {
         throw { status: 404, message: "SOW not found" };
       }
 
-      const totalAlreadyPlanned = await this.sowPaymentPlanDbService.getTotalPlannedAmountBySowId(dto.sowId);
+      // ─── Resolve customerUId → internal id ───────────────────────────────
+      const customer = await this.customerDbService.findCustomerByUId(dto.customerUId);
+      if (!customer) {
+        throw { status: 404, message: "Customer not found" };
+      }
+
+      // ─── Validate total planned amount does not exceed SOW value ──────────
+      const totalAlreadyPlanned = await this.sowPaymentPlanDbService.getTotalPlannedAmountBySowId(sow.id);
       const newTotal            = totalAlreadyPlanned + dto.totalActualAmount;
 
       if (newTotal > sow.totalValue) {
@@ -5209,19 +5090,18 @@ class SowPaymentPlanService {
         };
       }
 
-      const plan                   = new SowPaymentPlan();
-      plan.sowId                   = dto.sowId;
-      plan.customerId              = dto.customerId;
-      plan.plannedInvoiceDate      = dto.plannedInvoiceDate;
-      plan.totalActualAmount       = dto.totalActualAmount;
-      plan.version                 = 1;
-      plan.archive                 = false;
+      const plan              = new SowPaymentPlan();
+      plan.sowId              = sow.id;               // resolved internal id
+      plan.customerId         = customer.id;           // resolved internal id
+      plan.plannedInvoiceDate = dto.plannedInvoiceDate;
+      plan.totalActualAmount  = dto.totalActualAmount;
+      plan.version            = 1;
+      plan.archive            = false;
 
       const created = await this.sowPaymentPlanDbService.createSowPaymentPlan(plan);
       this.logger.info(`SOW Payment Plan created with id: ${created.id}`);
 
       return {
-        id:                 created.id,
         sowPaymentPlanUId:  created.sowPaymentPlanUId,
         sowId:              created.sowId,
         customerId:         created.customerId,
@@ -5248,13 +5128,11 @@ class SowPaymentPlanService {
         const sow       = (plan as any).Sow as Sow | null;
 
         return {
-          id:                 plan.id,
           sowPaymentPlanUId:  plan.sowPaymentPlanUId,
-          sowId:              plan.sowId,
-          customerId:         plan.customerId,
+          sowUI:              sow?.sowUId          ?? null,
+          customerName:       customer?.legalName ?? null,
           plannedInvoiceDate: plan.plannedInvoiceDate,
           totalActualAmount:  plan.totalActualAmount,
-          customerName:       customer?.legalName ?? null,
           sowTitle:           sow?.title          ?? null,
           SowPaymentPlanLineItems: lineItems.map((li) => ({
             id:                        li.id,
@@ -5363,13 +5241,19 @@ class SowPaymentPlanService {
     }
   }
 
-  async getSowPaymentPlansBySowId(sowId: string): Promise<ISowPaymentPlan[]> {
+  async getSowPaymentPlansBySowId(sowUId: string): Promise<ISowPaymentPlan[]> {
     try {
-      const plans = await this.sowPaymentPlanDbService.findSowPaymentPlansBySowId(sowId);
+      // ─── Resolve sowUId → internal id ────────────────────────────────────
+      const sow = await this.sowDbService.findSowByUId(sowUId);
+      if (!sow) {
+        throw { status: 404, message: "SOW not found" };
+      }
+
+      const plans = await this.sowPaymentPlanDbService.findSowPaymentPlansBySowId(sow.id);
       if (!plans.length) {
         throw { status: 404, message: "No SOW Payment Plans found for this SOW" };
       }
-      this.logger.info(`Fetched ${plans.length} SOW Payment Plans for sowId: ${sowId}`);
+      this.logger.info(`Fetched ${plans.length} SOW Payment Plans for sowUId: ${sowUId}`);
 
       return plans.map((plan) => {
         const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
@@ -5402,77 +5286,10 @@ class SowPaymentPlanService {
         } as any;
       });
     } catch (error: any) {
-      this.logger.error(`Error fetching SOW Payment Plans for sowId: ${sowId}`, error);
+      this.logger.error(`Error fetching SOW Payment Plans for sowUId: ${sowUId}`, error);
       throw error.status ? error : { status: 500, message: "Failed to fetch SOW Payment Plans" };
     }
   }
-
-  // async updateSowPaymentPlan(dto: UpdateSowPaymentPlanDto): Promise<ISowPaymentPlan> {
-  //   try {
-  //     const existing = await this.sowPaymentPlanDbService.findSowPaymentPlanByUId(dto.sowPaymentPlanUId);
-  //     if (!existing) {
-  //       throw { status: 404, message: "SOW Payment Plan not found" };
-  //     }
-
-  //     if (dto.totalActualAmount) {
-  //       const sow = await this.sowDbService.findSowById(existing.sowId);
-  //       if (!sow) {
-  //         throw { status: 404, message: "SOW not found" };
-  //       }
-  //       const totalExcludingCurrent = (await this.sowPaymentPlanDbService.getTotalPlannedAmountBySowId(existing.sowId)) - existing.totalActualAmount;
-  //       const newTotal              = totalExcludingCurrent + dto.totalActualAmount;
-  //       if (newTotal > sow.totalValue) {
-  //         throw {
-  //           status: 400,
-  //           message: `Total planned amount ($${newTotal}) exceeds SOW total value ($${sow.totalValue})`,
-  //         };
-  //       }
-  //     }
-
-  //     await this.sowPaymentPlanDbService.archiveSowPaymentPlan(existing.id!);
-
-  //     const updated                = new SowPaymentPlan();
-  //     updated.sowPaymentPlanUId    = existing.sowPaymentPlanUId;
-  //     updated.version              = existing.version + 1;
-  //     updated.archive              = false;
-  //     updated.sowId                = existing.sowId;
-  //     updated.customerId           = existing.customerId;
-  //     updated.plannedInvoiceDate   = dto.plannedInvoiceDate ?? existing.plannedInvoiceDate;
-  //     updated.totalActualAmount    = dto.totalActualAmount  ?? existing.totalActualAmount;
-
-  //     const created = await this.sowPaymentPlanDbService.createSowPaymentPlan(updated);
-  //     this.logger.info(`SOW Payment Plan updated with UId: ${dto.sowPaymentPlanUId} version: ${created.version}`);
-
-  //     return {
-  //       id:                 created.id,
-  //       sowPaymentPlanUId:  created.sowPaymentPlanUId,
-  //       sowId:              created.sowId,
-  //       customerId:         created.customerId,
-  //       plannedInvoiceDate: created.plannedInvoiceDate,
-  //       totalActualAmount:  created.totalActualAmount,
-  //       SowPaymentPlanLineItems: [],
-  //       Invoices:                [],
-  //     } as any;
-  //   } catch (error: any) {
-  //     this.logger.error("Error updating SOW Payment Plan", error);
-  //     throw error.status ? error : { status: 500, message: "Failed to update SOW Payment Plan" };
-  //   }
-  // }
-
-  // async deleteSowPaymentPlan(sowPaymentPlanUId: string): Promise<{ message: string }> {
-  //   try {
-  //     const existing = await this.sowPaymentPlanDbService.findSowPaymentPlanByUId(sowPaymentPlanUId);
-  //     if (!existing) {
-  //       throw { status: 404, message: "SOW Payment Plan not found" };
-  //     }
-  //     await this.sowPaymentPlanDbService.archiveSowPaymentPlan(existing.id!);
-  //     this.logger.info(`SOW Payment Plan deleted with UId: ${sowPaymentPlanUId}`);
-  //     return { message: "SOW Payment Plan deleted successfully" };
-  //   } catch (error: any) {
-  //     this.logger.error("Error deleting SOW Payment Plan", error);
-  //     throw error.status ? error : { status: 500, message: "Failed to delete SOW Payment Plan" };
-  //   }
-  // }
 
   async getInvoiceSchedule(): Promise<any[]> {
     try {
@@ -5516,7 +5333,7 @@ import InvoiceLineItem from "../models/invoiceLineItemModel";
 import Payment from "../models/paymentModel";
 import { CreateSowDto } from "../dto/createSowDto";
 import { UpdateSowDto } from "../dto/updateSowDto";
-import { ISowDbService } from "../postgresDB/pgInterface";
+import { ISowDbService, ICustomerDbService } from "../postgresDB/pgInterface";
 import { ISow } from "../interfaces/sowInterface";
 
 @injectable()
@@ -5525,19 +5342,28 @@ class SowService {
     @inject(TYPES.SowDbService)
     private readonly sowDbService: ISowDbService,
 
+    @inject(TYPES.CustomerDbService)
+    private readonly customerDbService: ICustomerDbService,
+
     @inject(TYPES.Logger)
     private readonly logger: Logger
   ) {}
 
   async createSow(dto: CreateSowDto): Promise<ISow> {
     try {
+
+      const customer = await this.customerDbService.findCustomerByUId(dto.customerUId);
+      if (!customer) {
+        throw { status: 404, message: "Customer not found" };
+      }
+
       const existing = await this.sowDbService.findSowByPONumber(dto.customerPONumber);
       if (existing) {
         throw { status: 409, message: "SOW with this PO number already exists" };
       }
 
       const sow                    = new Sow();
-      sow.customerId               = dto.customerId;
+      sow.customerId               = customer.id;       // resolved internal id
       sow.title                    = dto.title;
       sow.totalValue               = dto.totalValue;
       sow.currency                 = dto.currency;
@@ -5553,17 +5379,14 @@ class SowService {
       this.logger.info(`SOW created with id: ${created.id}`);
 
       return {
-        id:                    created.id,
         sowUId:                created.sowUId,
         customerId:            created.customerId,
         title:                 created.title,
         totalValue:            created.totalValue,
-        currency:              created.currency,
         validFrom:             created.validFrom,
         validUpto:             created.validUpto,
         customerPONumber:      created.customerPONumber,
         customerSONumber:      created.customerSONumber,
-        invoiceEmailAddresses: created.invoiceEmailAddresses,
         SowPaymentPlans:       [],
         Invoices:              [],
       } as any;
@@ -5582,17 +5405,10 @@ class SowService {
         const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
         const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
         return {
-          id:                    sow.id,
           sowUId:                sow.sowUId,
           customerId:            sow.customerId,
           title:                 sow.title,
           totalValue:            sow.totalValue,
-          currency:              sow.currency,
-          validFrom:             sow.validFrom,
-          validUpto:             sow.validUpto,
-          customerPONumber:      sow.customerPONumber,
-          customerSONumber:      sow.customerSONumber,
-          invoiceEmailAddresses: sow.invoiceEmailAddresses,
           SowPaymentPlans: plans.map((plan) => {
             const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
             return {
@@ -5661,12 +5477,6 @@ class SowService {
         customerId:            sow.customerId,
         title:                 sow.title,
         totalValue:            sow.totalValue,
-        currency:              sow.currency,
-        validFrom:             sow.validFrom,
-        validUpto:             sow.validUpto,
-        customerPONumber:      sow.customerPONumber,
-        customerSONumber:      sow.customerSONumber,
-        invoiceEmailAddresses: sow.invoiceEmailAddresses,
         SowPaymentPlans: plans.map((plan) => {
           const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
           return {
@@ -5717,68 +5527,6 @@ class SowService {
       throw error.status ? error : { status: 500, message: "Failed to fetch SOW" };
     }
   }
-
-  // async updateSow(dto: UpdateSowDto): Promise<ISow> {
-  //   try {
-  //     const existing = await this.sowDbService.findSowByUId(dto.sowUId);
-  //     if (!existing) {
-  //       throw { status: 404, message: "SOW not found" };
-  //     }
-
-  //     await this.sowDbService.archiveSow(existing.id!);
-
-  //     const updated                    = new Sow();
-  //     updated.sowUId                   = existing.sowUId;
-  //     updated.version                  = existing.version + 1;
-  //     updated.archive                  = false;
-  //     updated.customerId               = existing.customerId;
-  //     updated.title                    = dto.title                 ?? existing.title;
-  //     updated.totalValue               = dto.totalValue            ?? existing.totalValue;
-  //     updated.currency                 = dto.currency              ?? existing.currency;
-  //     updated.validFrom                = dto.validFrom             ?? existing.validFrom;
-  //     updated.validUpto                = dto.validUpto             ?? existing.validUpto;
-  //     updated.customerPONumber         = dto.customerPONumber      ?? existing.customerPONumber;
-  //     updated.customerSONumber         = dto.customerSONumber      ?? existing.customerSONumber;
-  //     updated.invoiceEmailAddresses    = dto.invoiceEmailAddresses ?? existing.invoiceEmailAddresses;
-
-  //     const created = await this.sowDbService.createSow(updated);
-  //     this.logger.info(`SOW updated with UId: ${dto.sowUId} version: ${created.version}`);
-
-  //     return {
-  //       id:                    created.id,
-  //       sowUId:                created.sowUId,
-  //       customerId:            created.customerId,
-  //       title:                 created.title,
-  //       totalValue:            created.totalValue,
-  //       currency:              created.currency,
-  //       validFrom:             created.validFrom,
-  //       validUpto:             created.validUpto,
-  //       customerPONumber:      created.customerPONumber,
-  //       customerSONumber:      created.customerSONumber,
-  //       invoiceEmailAddresses: created.invoiceEmailAddresses,
-  //       SowPaymentPlans:       [],
-  //       Invoices:              [],
-  //     } as any;
-  //   } catch (error: any) {
-  //     this.logger.error("Error updating SOW", error);
-  //     throw error.status ? error : { status: 500, message: "Failed to update SOW" };
-  //   }
-  // }
-
-  // async deleteSow(sowUId: string): Promise<{ message: string }> {
-  //   try {
-  //     const existing = await this.sowDbService.findSowByUId(sowUId);
-  //     if (!existing) {
-  //       throw { status: 404, message: "SOW not found" };
-  //     }
-  //     await this.sowDbService.archiveSow(existing.id!);
-  //     this.logger.info(`SOW deleted with UId: ${sowUId}`);
-  //     return { message: "SOW deleted successfully" };
-  //   } catch (error: any) {
-  //     this.logger.error("Error deleting SOW", error);
-  //     throw error.status ? error : { status: 500, message: "Failed to delete SOW" };
-  //   }
-  // }
 }
 
 export default SowService;

@@ -3,7 +3,7 @@ import { IsString, IsNotEmpty, IsBoolean, IsDateString } from "class-validator";
 export class CreateCustomerDto {
   @IsString()
   @IsNotEmpty()
-  organizationId: string;
+  organizationUId: string;
 
   @IsString()
   @IsNotEmpty()

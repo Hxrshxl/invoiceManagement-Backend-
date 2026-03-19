@@ -1,10 +1,9 @@
 import { IsBoolean, IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreatePaymentDto {
-
   @IsString()
   @IsNotEmpty()
-  invoiceId: string;
+  invoiceUId: string;
 
   @IsDateString()
   @IsNotEmpty()

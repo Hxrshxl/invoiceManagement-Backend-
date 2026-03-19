@@ -3,11 +3,11 @@ import { IsString, IsNotEmpty, IsNumber } from "class-validator";
 export class CreateSowPaymentPlanLineItemDto {
   @IsString()
   @IsNotEmpty()
-  sowPaymentPlanId: string;
+  sowPaymentPlanUId: string;
 
   @IsString()
   @IsNotEmpty()
-  sowId: string;
+  sowUId: string;
 
   @IsString()
   @IsNotEmpty()

@@ -42,21 +42,6 @@ class SowPaymentPlanLineItemController {
     }
   }
 
-  async getSowPaymentPlanLineItemsByPlanIdHandler(req: Request, res: Response): Promise<void> {
-    try {
-      const { sowPaymentPlanId } = req.body;
-      if (!sowPaymentPlanId) {
-        res.status(400).json({ success: false, message: "sowPaymentPlanId is required" });
-        return;
-      }
-      const lineItems = await this.sowPaymentPlanLineItemService.getSowPaymentPlanLineItemsByPlanId(sowPaymentPlanId);
-      res.status(200).json({ success: true, message: "SOW Payment Plan Line Items fetched successfully", data: lineItems });
-    } catch (error: any) {
-      this.logger.error("Error in getSowPaymentPlanLineItemsByPlanIdHandler", error);
-      res.status(error.status || 500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
-
   // async updateSowPaymentPlanLineItemHandler(req: Request, res: Response): Promise<void> {
   //   try {
   //     const { dto, errors } = await validateDto(UpdateSowPaymentPlanLineItemDto, req.body);
