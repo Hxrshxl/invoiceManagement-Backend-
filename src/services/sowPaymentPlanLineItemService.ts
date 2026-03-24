@@ -52,10 +52,9 @@ class SowPaymentPlanLineItemService {
       this.logger.info(`SOW Payment Plan Line Item created with id: ${created.id}`);
 
       return {
-        id:                        created.id,
         sowPaymentPlanLineItemUId: created.sowPaymentPlanLineItemUId,
-        sowPaymentPlanId:          created.sowPaymentPlanId,
-        sowId:                     created.sowId,
+        plannedInvoiceDate:        existingPlan.plannedInvoiceDate, 
+        sowTitle:                  existingSow.title,              
         orderId:                   created.orderId,
         particular:                created.particular,
         rate:                      created.rate,
@@ -82,8 +81,8 @@ class SowPaymentPlanLineItemService {
           rate:                      lineItem.rate,
           unit:                      lineItem.unit,
           total:                     lineItem.total,
-          plannedInvoiceDate:        plan?.plannedInvoiceDate ?? null,
-          sowTitle:                  sow?.title               ?? null,
+          plannedInvoiceDate:        plan?.plannedInvoiceDate ?? null, 
+          sowTitle:                  sow?.title               ?? null, 
         } as any;
       });
     } catch (error: any) {
@@ -92,6 +91,63 @@ class SowPaymentPlanLineItemService {
     }
   }
 
+  // async updateSowPaymentPlanLineItem(dto: UpdateSowPaymentPlanLineItemDto): Promise<ISowPaymentPlanLineItem> {
+  //   try {
+  //     const existing = await this.sowPaymentPlanLineItemDbService.findSowPaymentPlanLineItemByUId(dto.sowPaymentPlanLineItemUId);
+  //     if (!existing) {
+  //       throw { status: 404, message: "SOW Payment Plan Line Item not found" };
+  //     }
+
+  //     await this.sowPaymentPlanLineItemDbService.archiveSowPaymentPlanLineItem(existing.id!);
+
+  //     const updated                    = new SowPaymentPlanLineItem();
+  //     updated.sowPaymentPlanLineItemUId = existing.sowPaymentPlanLineItemUId;
+  //     updated.version                  = existing.version + 1;
+  //     updated.archive                  = false;
+  //     updated.sowPaymentPlanId         = existing.sowPaymentPlanId;
+  //     updated.sowId                    = existing.sowId;
+  //     updated.orderId                  = dto.orderId    ?? existing.orderId;
+  //     updated.particular               = dto.particular ?? existing.particular;
+  //     updated.rate                     = dto.rate       ?? existing.rate;
+  //     updated.unit                     = dto.unit       ?? existing.unit;
+  //     updated.total                    = dto.total      ?? existing.total;
+
+  //     const created = await this.sowPaymentPlanLineItemDbService.createSowPaymentPlanLineItem(updated);
+  //     this.logger.info(`SOW Payment Plan Line Item updated with UId: ${dto.sowPaymentPlanLineItemUId} version: ${created.version}`);
+
+  //     // NOTE: When uncommented, fetch plan and sow here to resolve plannedInvoiceDate and sowTitle
+  //     // const plan = await this.sowPaymentPlanDbService.findSowPaymentPlanById(created.sowPaymentPlanId);
+  //     // const sow  = await this.sowDbService.findSowById(created.sowId);
+  //     return {
+  //       sowPaymentPlanLineItemUId: created.sowPaymentPlanLineItemUId,
+  //       // plannedInvoiceDate:     plan?.plannedInvoiceDate ?? null,  // ✅ use this instead of sowPaymentPlanId
+  //       // sowTitle:               sow?.title               ?? null,  // ✅ use this instead of sowId
+  //       orderId:                   created.orderId,
+  //       particular:                created.particular,
+  //       rate:                      created.rate,
+  //       unit:                      created.unit,
+  //       total:                     created.total,
+  //     } as any;
+  //   } catch (error: any) {
+  //     this.logger.error("Error updating SOW Payment Plan Line Item", error);
+  //     throw error.status ? error : { status: 500, message: "Failed to update SOW Payment Plan Line Item" };
+  //   }
+  // }
+
+  // async deleteSowPaymentPlanLineItem(sowPaymentPlanLineItemUId: string): Promise<{ message: string }> {
+  //   try {
+  //     const existing = await this.sowPaymentPlanLineItemDbService.findSowPaymentPlanLineItemByUId(sowPaymentPlanLineItemUId);
+  //     if (!existing) {
+  //       throw { status: 404, message: "SOW Payment Plan Line Item not found" };
+  //     }
+  //     await this.sowPaymentPlanLineItemDbService.archiveSowPaymentPlanLineItem(existing.id!);
+  //     this.logger.info(`SOW Payment Plan Line Item deleted with UId: ${sowPaymentPlanLineItemUId}`);
+  //     return { message: "SOW Payment Plan Line Item deleted successfully" };
+  //   } catch (error: any) {
+  //     this.logger.error("Error deleting SOW Payment Plan Line Item", error);
+  //     throw error.status ? error : { status: 500, message: "Failed to delete SOW Payment Plan Line Item" };
+  //   }
+  // }
 }
 
 export default SowPaymentPlanLineItemService;

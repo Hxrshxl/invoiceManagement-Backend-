@@ -6,7 +6,6 @@ import Sow from "../models/sowModel";
 import SowPaymentPlan from "../models/sowPaymentPlanModel";
 import Invoice from "../models/invoiceModel";
 import { CreateCustomerDto } from "../dto/createCustomerDto";
-import { UpdateCustomerDto } from "../dto/updateCustomerDto";
 import { ICustomerDbService, IOrganizationDbService } from "../postgresDB/pgInterface";
 import { ICustomer } from "../interfaces/customerInterface";
 
@@ -25,7 +24,6 @@ class CustomerService {
 
   async createCustomer(dto: CreateCustomerDto): Promise<ICustomer> {
     try {
-      // ─── Resolve organizationUId → internal id ────────────────────────────
       const organization = await this.organizationDbService.findOrganizationByUId(dto.organizationUId);
       if (!organization) {
         throw { status: 404, message: "Organization not found" };
@@ -37,7 +35,7 @@ class CustomerService {
       }
 
       const customer          = new Customer();
-      customer.organizationId = organization.id;        // resolved internal id
+      customer.organizationId = organization.id;
       customer.legalName      = dto.legalName;
       customer.shortName      = dto.shortName;
       customer.displayName    = dto.displayName;
@@ -57,13 +55,12 @@ class CustomerService {
       this.logger.info(`Customer created with id: ${created.id}`);
 
       return {
-        id:             created.id,
-        customerUId:    created.customerUId,
-        organizationId: created.organizationId,
-        legalName:      created.legalName,
-        shortName:      created.shortName,
-        displayName:    created.displayName,
-        Sows:           [],
+        customerUId:      created.customerUId,
+        organizationName: organization.legalOrganizationName,
+        legalName:        created.legalName,
+        shortName:        created.shortName,
+        displayName:      created.displayName,
+        Sows:             [],
       } as any;
     } catch (error: any) {
       this.logger.error("Error creating customer", error);
@@ -79,23 +76,24 @@ class CustomerService {
       return customers.map((customer) => {
         const sows = ((customer as any).Sows as Sow[]) ?? [];
         return {
-          id:             customer.id,
-          customerUId:    customer.customerUId,
-          organizationId: customer.organizationId,
-          legalName:      customer.legalName,
-          shortName:      customer.shortName,
-          displayName:    customer.displayName,
+          customerUId: customer.customerUId,
+          legalName:   customer.legalName,
+          shortName:   customer.shortName,
+          displayName: customer.displayName,
           Sows: sows.map((sow) => {
             const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
             const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
             return {
+              sowUId:      sow.sowUId,
               title:       sow.title,
               totalValue:  sow.totalValue,
               SowPaymentPlans: plans.map((plan) => ({
+                sowPaymentPlanUId:  plan.sowPaymentPlanUId,
                 plannedInvoiceDate: plan.plannedInvoiceDate,
                 totalActualAmount:  plan.totalActualAmount,
               })),
               Invoices: invoices.map((invoice) => ({
+                invoiceUId:        invoice.invoiceUId,
                 status:            invoice.status,
                 totalInvoiceValue: invoice.totalInvoiceValue,
                 invoiceAmount:     invoice.invoiceAmount,
@@ -121,23 +119,24 @@ class CustomerService {
 
       const sows = ((customer as any).Sows as Sow[]) ?? [];
       return {
-        id:             customer.id,
-        customerUId:    customer.customerUId,
-        organizationId: customer.organizationId,
-        legalName:      customer.legalName,
-        shortName:      customer.shortName,
-        displayName:    customer.displayName,
+        customerUId: customer.customerUId,
+        legalName:   customer.legalName,
+        shortName:   customer.shortName,
+        displayName: customer.displayName,
         Sows: sows.map((sow) => {
           const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
           const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
           return {
+            sowUId:      sow.sowUId,
             title:       sow.title,
             totalValue:  sow.totalValue,
             SowPaymentPlans: plans.map((plan) => ({
+              sowPaymentPlanUId:  plan.sowPaymentPlanUId,
               plannedInvoiceDate: plan.plannedInvoiceDate,
               totalActualAmount:  plan.totalActualAmount,
             })),
             Invoices: invoices.map((invoice) => ({
+              invoiceUId:        invoice.invoiceUId,
               status:            invoice.status,
               totalInvoiceValue: invoice.totalInvoiceValue,
               invoiceAmount:     invoice.invoiceAmount,

@@ -61,8 +61,8 @@ class SowPaymentPlanService {
 
       return {
         sowPaymentPlanUId:       created.sowPaymentPlanUId,
-        sowId:                   created.sowId,
-        customerId:              created.customerId,
+        sowTitle:                sow.title,         
+        customerName:            customer.legalName, 
         plannedInvoiceDate:      created.plannedInvoiceDate,
         totalActualAmount:       created.totalActualAmount,
         SowPaymentPlanLineItems: [],
@@ -89,7 +89,7 @@ class SowPaymentPlanService {
           sowPaymentPlanUId:  plan.sowPaymentPlanUId,
           plannedInvoiceDate: plan.plannedInvoiceDate,
           totalActualAmount:  plan.totalActualAmount,
-          customerName:       customer?.legalName ?? null,
+          customerName:       customer?.legalName ?? null, 
           sowTitle:           sow?.title          ?? null,
           SowPaymentPlanLineItems: lineItems.map((li) => ({
             particular: li.particular,
@@ -128,8 +128,8 @@ class SowPaymentPlanService {
         sowPaymentPlanUId:  plan.sowPaymentPlanUId,
         plannedInvoiceDate: plan.plannedInvoiceDate,
         totalActualAmount:  plan.totalActualAmount,
-        customerName:       customer?.legalName ?? null,
-        sowTitle:           sow?.title          ?? null,
+        customerName:       customer?.legalName ?? null,  
+        sowTitle:           sow?.title          ?? null,  
         SowPaymentPlanLineItems: lineItems.map((li) => ({
           orderId:    li.orderId,
           particular: li.particular,
@@ -167,11 +167,14 @@ class SowPaymentPlanService {
       return plans.map((plan) => {
         const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
         const invoices  = ((plan as any).Invoices as Invoice[])                               ?? [];
+        const customer  = (plan as any).Customer as Customer | null;
 
         return {
           sowPaymentPlanUId:  plan.sowPaymentPlanUId,
           plannedInvoiceDate: plan.plannedInvoiceDate,
           totalActualAmount:  plan.totalActualAmount,
+          sowTitle:           sow.title,                    
+          customerName:       customer?.legalName ?? null,  
           SowPaymentPlanLineItems: lineItems.map((li) => ({
             orderId:    li.orderId,
             particular: li.particular,
@@ -206,7 +209,7 @@ class SowPaymentPlanService {
           plannedInvoiceDate: plan.plannedInvoiceDate,
           totalActualAmount:  plan.totalActualAmount,
           invoiceGenerated:   invoice ? true : false,
-          invoiceStatus:      invoice ? invoice.status     : null,
+          invoiceStatus:      invoice ? invoice.status : null,
         };
       });
     } catch (error: any) {

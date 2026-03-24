@@ -7,6 +7,7 @@ import SowPaymentPlanLineItem from "../models/sowPaymentPlanLineItemModel";
 import Invoice from "../models/invoiceModel";
 import InvoiceLineItem from "../models/invoiceLineItemModel";
 import Payment from "../models/paymentModel";
+import Customer from "../models/customerModel";
 import { CreateSowDto } from "../dto/createSowDto";
 import { UpdateSowDto } from "../dto/updateSowDto";
 import { ISowDbService, ICustomerDbService } from "../postgresDB/pgInterface";
@@ -55,7 +56,7 @@ class SowService {
 
       return {
         sowUId:           created.sowUId,
-        customerId:       created.customerId,
+        customerName:     customer.legalName,    
         title:            created.title,
         totalValue:       created.totalValue,
         validFrom:        created.validFrom,
@@ -76,48 +77,51 @@ class SowService {
       const sows = await this.sowDbService.findAllSows();
       this.logger.info(`Fetched ${sows.length} SOWs`);
 
-      return sows.map((sow) => {
-        const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
-        const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
+      return await Promise.all(
+        sows.map(async (sow) => {
+          const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
+          const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
+          const customer = await this.customerDbService.findCustomerById(sow.customerId);
 
-        return {
-          sowUId:      sow.sowUId,
-          customerId:  sow.customerId,
-          title:       sow.title,
-          totalValue:  sow.totalValue,
-          validFrom:   sow.validFrom,
-          validUpto:   sow.validUpto,
-          SowPaymentPlans: plans.map((plan) => {
-            const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
-            return {
-              plannedInvoiceDate: plan.plannedInvoiceDate,
-              totalActualAmount:  plan.totalActualAmount,
-              SowPaymentPlanLineItems: lineItems.map((li) => ({
-                orderId:    li.orderId,
-                particular: li.particular,
-                rate:       li.rate,
-                unit:       li.unit,
-                total:      li.total,
-              })),
-            };
-          }),
-          Invoices: invoices.map((invoice) => {
-            const lineItems = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
-            const payment   = (invoice as any).Payment as Payment | null;
-            return {
-              status:            invoice.status,
-              totalInvoiceValue: invoice.totalInvoiceValue,
-              invoiceAmount:     invoice.invoiceAmount,
-              paymentReceivedOn: invoice.paymentReceivedOn,
-              Payment: payment ? {
-                paymentDate:   payment.paymentDate,
-                isFullPayment: payment.isFullPayment,
-                bankPayment:   payment.bankPayment,
-              } : null,
-            };
-          }),
-        } as any;
-      });
+          return {
+            sowUId:       sow.sowUId,
+            customerName: customer?.legalName ?? null,
+            title:        sow.title,
+            totalValue:   sow.totalValue,
+            validFrom:    sow.validFrom,
+            validUpto:    sow.validUpto,
+            SowPaymentPlans: plans.map((plan) => {
+              const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
+              return {
+                plannedInvoiceDate: plan.plannedInvoiceDate,
+                totalActualAmount:  plan.totalActualAmount,
+                SowPaymentPlanLineItems: lineItems.map((li) => ({
+                  orderId:    li.orderId,
+                  particular: li.particular,
+                  rate:       li.rate,
+                  unit:       li.unit,
+                  total:      li.total,
+                })),
+              };
+            }),
+            Invoices: invoices.map((invoice) => {
+              const lineItems = ((invoice as any).InvoiceLineItems as InvoiceLineItem[]) ?? [];
+              const payment   = (invoice as any).Payment as Payment | null;
+              return {
+                status:            invoice.status,
+                totalInvoiceValue: invoice.totalInvoiceValue,
+                invoiceAmount:     invoice.invoiceAmount,
+                paymentReceivedOn: invoice.paymentReceivedOn,
+                Payment: payment ? {
+                  paymentDate:   payment.paymentDate,
+                  isFullPayment: payment.isFullPayment,
+                  bankPayment:   payment.bankPayment,
+                } : null,
+              };
+            }),
+          } as any;
+        })
+      );
     } catch (error: any) {
       this.logger.error("Error fetching SOWs", error);
       throw error.status ? error : { status: 500, message: "Failed to fetch SOWs" };
@@ -135,10 +139,15 @@ class SowService {
       const plans    = ((sow as any).SowPaymentPlans as SowPaymentPlan[]) ?? [];
       const invoices = ((sow as any).Invoices as Invoice[])               ?? [];
 
+      const customer = await this.customerDbService.findCustomerById(sow.customerId);
+
       return {
-        sowUId:      sow.sowUId,
-        title:       sow.title,
-        totalValue:  sow.totalValue,
+        sowUId:       sow.sowUId,
+        customerName: customer?.legalName ?? null,  
+        title:        sow.title,
+        totalValue:   sow.totalValue,
+        validFrom:    sow.validFrom,
+        validUpto:    sow.validUpto,
         SowPaymentPlans: plans.map((plan) => {
           const lineItems = ((plan as any).SowPaymentPlanLineItems as SowPaymentPlanLineItem[]) ?? [];
           return {
